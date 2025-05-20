@@ -1,0 +1,30 @@
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: rag_backend
+    environment:
+      - OLLAMA_BASE_URL=http://172.17.0.1:11434
+    networks:
+      - rag_network
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx.Dockerfile
+    container_name: rag_nginx
+    ports:
+      - "8181:80"
+    depends_on:
+      - backend
+    networks:
+      - rag_network
+
+networks:
+  rag_network:
+    driver: bridge
+
+volumes:
+  ollama_data:

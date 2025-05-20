@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama:latest-rocm
+    container_name: rag_ollama_rocm
+    ports:
+      - "11434:11434"
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    group_add:
+      - video
+      - render
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - rag_network
+
+volumes:
+  ollama_data:
+
+networks:
+  rag_network:
+    name: ollama-rag_rag_network

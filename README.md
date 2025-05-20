@@ -1,0 +1,232 @@
+# Personal Skills RAG System with Ollama
+
+This project implements a Retrieval Augmented Generation (RAG) system using Ollama, LangChain, and FastAPI. It allows people to ask questions about your skills and experience, with responses based on your CV and markdown files containing skill descriptions. The system features a modern Vue.js chat interface with a Gruvbox theme and can be run either locally or using Docker.
+
+## 🚀 New Features
+
+- **GPU Acceleration**: Support for NVIDIA CUDA and AMD ROCm GPUs for faster inference
+- **Markdown Formatting**: Enhanced response readability with proper Markdown formatting
+- **Automatic GPU Detection**: Smart detection and configuration of available GPU hardware
+- **Flexible Deployment**: Choose between CPU, NVIDIA, or AMD GPU modes
+- **Gruvbox Theme**: Consistent dark theme throughout the interface
+
+## Project Overview
+
+The system works by:
+
+1. Loading your CV and skill description markdown files
+2. Splitting the documents into manageable chunks
+3. Creating embeddings for these chunks using Ollama
+4. Storing these embeddings in a vector database (FAISS)
+5. When a question is asked, retrieving relevant context from the vector database
+6. Using Ollama to generate an answer based on the retrieved context, formatted in Markdown
+
+## Features
+
+- Local execution using Ollama models
+- GPU acceleration support (NVIDIA CUDA and AMD ROCm)
+- RAG system for accurate, context-based answers
+- FastAPI backend for efficient API performance
+- Vue.js frontend with Gruvbox theme and Markdown support
+- Nginx reverse proxy for production deployment
+- Pure devenv development environment (no flakes)
+- Automatic document processing and embedding generation
+- Docker support for easy deployment
+- Smart GPU detection and configuration
+
+## Directory Structure
+
+```plaintext
+ollama-rag/
+├── devenv.nix                   # Development environment configuration 
+├── devenv.yaml                  # Additional devenv configuration
+├── docker-compose.yml           # Base Docker configuration
+├── docker-compose.cuda.yml      # NVIDIA GPU support configuration
+├── docker-compose.rocm.yml      # AMD GPU support configuration
+├── requirements.txt             # Python dependencies
+├── PROJECT_PLAN.md              # Project planning and progress
+├── data/                        # Data directory
+│   ├── cv/                      # Place your CV files here
+│   ├── skills_md/               # Place markdown files about your skills here
+│   └── vectorstore/             # Vector database storage
+├── src/                         # Source code
+│   ├── api/                     # API code
+│   │   ├── __init__.py
+│   │   └── main.py              # FastAPI application
+│   ├── core/                    # Core RAG logic
+│   │   ├── __init__.py
+│   │   └── rag_pipeline.py      # RAG pipeline implementation
+│   └── scripts/                 # Utility scripts
+│       ├── __init__.py
+│       └── ingest_data.py       # Script to ingest and process data
+├── static/                      # Frontend assets
+│   └── index.html               # Vue.js chat interface
+├── docs/                        # Documentation
+│   └── GPU_SUPPORT.md           # GPU configuration guide
+└── docker/                      # Docker configuration
+    ├── backend.Dockerfile       # Backend service Dockerfile
+    ├── nginx.Dockerfile         # Nginx reverse proxy Dockerfile
+    ├── nginx.conf               # Nginx configuration
+    └── start.sh                 # Backend startup script
+```
+
+## Setup Instructions
+
+### Development Environment
+
+1. Install Nix and direnv if not already installed:
+
+```bash
+# For Nix
+sh <(curl -L https://nixos.org/nix/install) --daemon
+
+# For direnv
+nix-env -i direnv
+```
+
+1. Clone the repository:
+
+```bash
+git clone <repository-url>
+cd ollama-rag
+```
+
+1. Enable direnv:
+
+```bash
+direnv allow
+```
+
+### Local Development
+
+1. Place your CV and skill files in the appropriate directories:
+   - Add CV files to `data/cv/`
+   - Add skill descriptions to `data/skills_md/`
+
+2. Process your documents:
+
+```bash
+python -m src.scripts.ingest_data
+```
+
+1. Start the development server:
+
+```bash
+python -m src.api.main
+```
+
+1. Visit [http://localhost:8000](http://localhost:8000) in your browser
+
+### Production Deployment
+
+1. Ensure Docker and Docker Compose are installed
+
+2. Check your GPU support:
+
+```bash
+just check-gpu
+```
+
+1. Deploy based on your hardware:
+
+```bash
+# For NVIDIA GPUs:
+just up-cuda
+
+# For AMD GPUs:
+just up-rocm
+
+# For CPU only:
+just up
+```
+
+1. Visit [http://localhost:8181](http://localhost:8181) in your browser
+
+## Usage
+
+### Starting the System
+
+Choose the appropriate command based on your hardware:
+
+```bash
+# Check GPU support
+just check-gpu
+
+# Start with NVIDIA GPU support
+just up-cuda
+
+# Start with AMD GPU support
+just up-rocm
+
+# Start with CPU only
+just up
+```
+
+The system will auto-configure based on your hardware and start all necessary services.
+
+### Using the Chat Interface
+
+The chat interface now supports full Markdown formatting in responses:
+
+- Headers for clear section organization
+- Code blocks for technical content
+- Lists for structured information
+- Tables for organized data
+- Blockquotes for important notes
+- Bold and italic text for emphasis
+
+### API Endpoints
+
+- `GET /`: Serves the Vue.js chat interface with Markdown support
+- `POST /api/ask`: Main endpoint for questions and answers
+- `GET /api/health`: Health check endpoint
+- `GET /docs`: API documentation (Swagger UI)
+
+## Response Format
+
+Responses are formatted in Markdown for better readability:
+
+```markdown
+## Topic
+Description of the topic
+
+### Subtopic
+- List item 1
+- List item 2
+
+> Important note or highlight
+
+\`\`\`python
+# Code example
+def example():
+    return "Hello World"
+\`\`\`
+
+For more information, see: [link](#)
+```
+
+## Container Architecture
+
+The Docker deployment consists of:
+
+- Backend service container with FastAPI
+- Nginx reverse proxy for routing
+- Optional GPU support configuration
+- Automatic hardware detection
+- Health monitoring
+- Volume mounts for persistence
+
+## Documentation
+
+- [GPU Support Guide](docs/GPU_SUPPORT.md): Detailed GPU configuration instructions
+- API Documentation: Available at `/docs` endpoint
+- [Project Plan](PROJECT_PLAN.md): Implementation details and progress
+
+## Support and Issues
+
+If you encounter any issues:
+
+1. Check the GPU support with `just check-gpu`
+2. Verify your Docker installation
+3. Check the logs with `just logs`
+4. Consult the [GPU Support Guide](docs/GPU_SUPPORT.md)
