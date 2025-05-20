@@ -1,0 +1,49 @@
+{
+    # Debug mode for initial setup
+    debug
+
+    # Enable admin API for status checks
+    admin :2019
+}
+
+home.freundcloud.com {
+    # Log for debugging
+    log {
+        format console
+        level DEBUG
+    }
+
+    # Serve static files
+    root * /srv/static
+    file_server
+
+    # Handle API requests
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy backend:8000
+    }
+
+    # Handle root path
+    handle / {
+        try_files /index.html
+    }
+
+    # Global options
+    encode gzip
+    header {
+        # Enable CORS
+        Access-Control-Allow-Origin *
+        # Security headers
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # TLS configuration
+    tls {
+        protocols tls1.2 tls1.3
+        # Use automatic HTTPS
+        on_demand
+    }
+}

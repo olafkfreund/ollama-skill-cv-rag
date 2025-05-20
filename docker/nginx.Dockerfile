@@ -11,12 +11,17 @@ COPY assets /usr/share/nginx/html/assets
 RUN chmod -R 755 /usr/share/nginx/html && \
     chown -R nginx:nginx /usr/share/nginx/html
 
-# Fix permissions for Nginx temp/cache directories
-RUN mkdir -p /var/cache/nginx /var/run /var/log/nginx && \
-    chown -R nginx:nginx /var/cache/nginx /var/run /var/log/nginx
+# Fix permissions for Nginx temp/cache directories and SSL
+RUN mkdir -p /var/cache/nginx /var/run /var/log/nginx /etc/letsencrypt && \
+    chown -R nginx:nginx /var/cache/nginx /var/run /var/log/nginx /etc/letsencrypt && \
+    chmod -R 755 /etc/letsencrypt
+
+# Create directory for ACME challenge
+RUN mkdir -p /var/www/certbot && \
+    chown -R nginx:nginx /var/www/certbot
 
 # Copy custom nginx config
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/nginx.ssl.conf /etc/nginx/conf.d/default.conf
 COPY docker/nginx.main.conf /etc/nginx/nginx.conf
 
 # Override pid file location for non-root user

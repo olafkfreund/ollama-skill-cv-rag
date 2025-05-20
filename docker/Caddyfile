@@ -1,0 +1,50 @@
+{
+    debug
+    admin :2019
+    auto_https disable_redirects
+}
+
+home.freundcloud.com {
+    log {
+        format console
+        level DEBUG
+    }
+
+    # Handle root path
+    handle / {
+        root * /srv/static
+        try_files {path} /index.html
+        file_server
+    }
+
+    # Handle assets
+    handle /assets/* {
+        root * /srv
+        file_server
+    }
+
+    # Handle API requests
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy backend:8000
+    }
+
+    # Security headers
+    header {
+        # Enable HSTS
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        # Prevent browsers from trying to guess types
+        X-Content-Type-Options "nosniff"
+        # Prevent clickjacking
+        X-Frame-Options "DENY"
+        # XSS protection
+        X-XSS-Protection "1; mode=block"
+        # Restrict referrer information
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # Remove Server header
+        -Server
+    }
+
+    # Enable compression
+    encode gzip
+}

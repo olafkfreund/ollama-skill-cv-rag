@@ -12,6 +12,8 @@ This project creates a Retrieval Augmented Generation (RAG) system using Ollama,
 - 🔄 **Flexible Deployment**: Run with or without GPU support
 - 🤖 **Advanced RAG Pipeline**: Optimized for accurate responses
 - 🔒 **Secure Docker Setup**: Following best practices for container security
+- 🔐 **HTTPS by Default**: Automatic HTTPS with Caddy server
+- 🖼️ **Profile Integration**: Personal branding with profile picture
 
 ## Project Structure
 
@@ -25,6 +27,8 @@ ollama-rag/
 ├── requirements.txt           # Python dependencies
 ├── README.md                  # Project documentation
 ├── PROJECT_PLAN.md           # This file
+├── assets/
+│   └── profile_pictures.jpg  # Profile picture for chat interface
 ├── data/
 │   ├── cv/                    # Directory for your CV file
 │   ├── skills_md/             # Directory for skill description markdown files
@@ -45,8 +49,8 @@ ollama-rag/
 │   └── GPU_SUPPORT.md        # GPU configuration documentation
 └── docker/
     ├── backend.Dockerfile     # Backend service Dockerfile
-    ├── nginx.Dockerfile       # Nginx reverse proxy Dockerfile
-    ├── nginx.conf            # Nginx configuration
+    ├── caddy.Dockerfile      # Caddy reverse proxy Dockerfile
+    ├── Caddyfile             # Caddy server configuration
     └── start.sh              # Backend startup script
 ```
 
@@ -57,7 +61,7 @@ ollama-rag/
 - [x] Create pure devenv development environment
 - [x] Create directory structure
 - [x] Create requirements.txt with necessary dependencies
-- [x] Set up Docker configuration with Nginx reverse proxy
+- [x] Set up Docker configuration with reverse proxy
 
 ### Phase 2: Web Interface ✅
 
@@ -67,6 +71,8 @@ ollama-rag/
 - [x] Add real-time chat features
 - [x] Implement Markdown rendering with marked.js
 - [x] Add Gruvbox-themed Markdown styling
+- [x] Add profile picture support
+- [x] Configure Caddy for static file serving
 
 ### Phase 3: Data Processing Pipeline ✅
 
@@ -88,68 +94,24 @@ ollama-rag/
 - [x] Create FastAPI application with chat endpoint (see main.py for /ask endpoint)
 - [x] Integrate the RAG pipeline with the API (see main.py for integration with answer_question from rag_pipeline.py)
 - [x] Add error handling and logging (see exception handling and logging in main.py)
-- [x] Configure Nginx reverse proxy for API endpoints (see docker/nginx.conf for /api/ proxy configuration)
+- [x] Configure Caddy reverse proxy for API endpoints (see docker/Caddyfile for /api/ proxy configuration)
 
 ### Phase 6: Docker Deployment ✅
 
 - [x] Create Docker Compose configuration
-- [x] Create Dockerfiles for backend and Nginx
-- [x] Configure Nginx reverse proxy
+- [x] Create Dockerfiles for backend and Caddy
+- [x] Configure Caddy reverse proxy with automatic HTTPS
 - [x] Add NVIDIA CUDA support configuration
 - [x] Add AMD ROCm support configuration
 - [x] Implement GPU detection and setup commands
+- [x] Add assets handling in Caddy configuration
 - [x] Test Docker deployment
-- [x] Add container health checks
 
-### Phase 7: Testing & Refinement ✅
+### Phase 7: Enhancements and Optimizations ✅
 
-- [x] Test document ingestion process
-- [x] Test the RAG pipeline with sample questions
-- [x] Test API endpoints
-- [x] Test Docker deployment
-- [x] Test GPU configurations
-- [x] Refine prompt templates and retrieval parameters based on results
-- [x] Verify Markdown formatting in responses
-
-### Phase 8: Documentation & Final Setup ✅
-
-- [x] Update directory structure documentation
-- [x] Document Docker deployment setup
-- [x] Add GPU support documentation
-- [x] Document Markdown styling configurations
-- [x] Complete API endpoints documentation
-- [x] Create example questions and expected answers
-- [x] Add troubleshooting guide
-
-## Development Instructions
-
-### Local Development
-
-1. Install Nix and direnv
-1. Run `direnv allow` to set up the environment
-1. Add CV and skill markdown files to directories
-1. Process documents: `python -m src.scripts.ingest_data`
-1. Start the local development server: `python -m src.api.main`
-
-### Container Deployment
-
-First, check your GPU support:
-
-```bash
-just check-gpu
-```
-
-Then deploy based on your hardware:
-
-```bash
-# For NVIDIA GPUs:
-just up-cuda
-
-# For AMD GPUs:
-just up-rocm
-
-# For CPU only:
-just up
-```
-
-Finally, open [http://localhost:8181](http://localhost:8181) in your browser
+- [x] Implement proper static file serving with Caddy
+- [x] Add profile picture support in the UI
+- [x] Configure automatic HTTPS with Caddy
+- [x] Optimize Docker container configurations
+- [x] Improve error handling and logging
+- [x] Add comprehensive documentation

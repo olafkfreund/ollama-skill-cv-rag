@@ -9,6 +9,8 @@ This project implements a Retrieval Augmented Generation (RAG) system using Olla
 - **Automatic GPU Detection**: Smart detection and configuration of available GPU hardware
 - **Flexible Deployment**: Choose between CPU, NVIDIA, or AMD GPU modes
 - **Gruvbox Theme**: Consistent dark theme throughout the interface
+- **Caddy Server**: Modern, automatic HTTPS with Caddy reverse proxy
+- **Profile Picture Support**: Personal branding with profile picture integration
 
 ## Project Overview
 
@@ -28,11 +30,12 @@ The system works by:
 - RAG system for accurate, context-based answers
 - FastAPI backend for efficient API performance
 - Vue.js frontend with Gruvbox theme and Markdown support
-- Nginx reverse proxy for production deployment
+- Caddy reverse proxy with automatic HTTPS
 - Pure devenv development environment (no flakes)
 - Automatic document processing and embedding generation
 - Docker support for easy deployment
 - Smart GPU detection and configuration
+- Profile picture integration for personal branding
 
 ## Directory Structure
 
@@ -45,6 +48,8 @@ ollama-rag/
 ├── docker-compose.rocm.yml      # AMD GPU support configuration
 ├── requirements.txt             # Python dependencies
 ├── PROJECT_PLAN.md              # Project planning and progress
+├── assets/                      # Static assets
+│   └── profile_pictures.jpg     # Profile picture for the chat interface
 ├── data/                        # Data directory
 │   ├── cv/                      # Place your CV files here
 │   ├── skills_md/               # Place markdown files about your skills here
@@ -65,8 +70,8 @@ ollama-rag/
 │   └── GPU_SUPPORT.md           # GPU configuration guide
 └── docker/                      # Docker configuration
     ├── backend.Dockerfile       # Backend service Dockerfile
-    ├── nginx.Dockerfile         # Nginx reverse proxy Dockerfile
-    ├── nginx.conf               # Nginx configuration
+    ├── caddy.Dockerfile         # Caddy reverse proxy Dockerfile
+    ├── Caddyfile                # Caddy configuration
     └── start.sh                 # Backend startup script
 ```
 
@@ -210,7 +215,7 @@ For more information, see: [link](#)
 The Docker deployment consists of:
 
 - Backend service container with FastAPI
-- Nginx reverse proxy for routing
+- Caddy reverse proxy for routing and automatic HTTPS
 - Optional GPU support configuration
 - Automatic hardware detection
 - Health monitoring

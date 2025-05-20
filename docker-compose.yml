@@ -1,4 +1,3 @@
-
 services:
   backend:
     build:
@@ -10,13 +9,31 @@ services:
     networks:
       - rag_network
 
-  nginx:
+  caddy:
     build:
       context: .
-      dockerfile: docker/nginx.Dockerfile
-    container_name: rag_nginx
+      dockerfile: docker/caddy.Dockerfile
+    container_name: rag_caddy
     ports:
-      - "8181:80"
+      - "80:80"
+      - "443:443"
+      - "2019:2019" # Admin API
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile
+      - ./static:/srv/static:ro
+      - ./templates:/srv/templates:ro
+      - ./assets:/srv/assets:ro
+    environment:
+      - DOMAIN=home.freundcloud.com
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2019/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     depends_on:
       - backend
     networks:
@@ -28,3 +45,5 @@ networks:
 
 volumes:
   ollama_data:
+  caddy_data:
+  caddy_config:

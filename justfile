@@ -43,6 +43,22 @@ check-gpu:
         echo "No GPU detected, use 'just up' (local Ollama)"
     fi
 
+# Set up SSL certificates
+setup-ssl:
+    ./scripts/init-letsencrypt.sh
+
+# Start services with SSL
+up-ssl:
+    docker compose up -d
+
+# View Caddy logs
+caddy-logs:
+    docker compose logs -f caddy
+
+# Check Caddy status
+caddy-status:
+    docker compose exec caddy caddy status
+
 # Rebuild and restart with local Ollama
 rebuild:
     just down
