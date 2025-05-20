@@ -28,11 +28,12 @@ COPY --from=builder /usr/local/bin/uvicorn /usr/local/bin/
 # Copy application code and start script
 COPY src/ src/
 COPY data/ data/
+COPY templates/ templates/
+COPY static/ static/
 COPY docker/start.sh /start.sh
 
-# Create necessary directories
-RUN mkdir -p static templates && \
-    chmod +x /start.sh
+# Set execute permissions
+RUN chmod +x /start.sh
 
 EXPOSE 8000
 

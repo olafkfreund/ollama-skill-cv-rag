@@ -45,9 +45,17 @@ def create_response(status: str, data: Any, message: str) -> Dict[str, Any]:
 app = FastAPI(
     title="Personal Skills RAG System",
     description="A RAG system that answers questions about my skills and experience",
-    version="1.0.0",
-    root_path="/api"  # Add root_path for proper routing
+    version="1.0.0"
 )
+
+# Define base directories
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+templates_dir = BASE_DIR / "templates"
+static_dir = BASE_DIR / "static"
+
+# Mount static files and templates
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+templates = Jinja2Templates(directory=str(templates_dir))
 
 # Add CORS middleware to allow requests from a frontend
 app.add_middleware(
@@ -71,9 +79,9 @@ class AnswerResponse(BaseModel):
 
 
 @app.get("/")
-def read_root():
-    """Root endpoint that returns a welcome message."""
-    return {"message": "Welcome to the Personal Skills RAG API", "status": "active"}
+async def read_root(request: Request):
+    """Root endpoint that returns the web interface."""
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.get("/health")
