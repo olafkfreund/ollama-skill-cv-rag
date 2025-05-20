@@ -221,6 +221,67 @@ The Docker deployment consists of:
 - Health monitoring
 - Volume mounts for persistence
 
+## Customization
+
+### Changing Profile Information
+
+1. **Profile Picture**:
+   - Replace the file at `assets/profile_pictures.jpg` with your own profile picture
+   - The recommended image size is 180x180 pixels
+   - The image will be automatically styled with a circular crop and subtle shadow
+
+2. **Changing Display Name**:
+   - Open `static/index.html`
+   - Locate the div with the name (around line 150)
+   - Change the text "Olaf K-Freund" to your name
+
+   ```html
+   <div style="font-size:1.2rem; color:#bdae93; margin-top:0.5rem; font-weight:bold;">Your Name</div>
+   ```
+
+### Domain and SSL Configuration
+
+1. **Changing Domain**:
+   - Open `docker/Caddyfile`
+   - Replace `home.freundcloud.com` with your domain name
+
+   ```caddy
+   your-domain.com {
+       # ...existing configuration...
+   }
+   ```
+
+   - Update the `DOMAIN` environment variable in `docker-compose.yml`:
+
+   ```yaml
+   environment:
+     - DOMAIN=your-domain.com
+   ```
+
+2. **SSL Certificate**:
+   - Caddy handles SSL certificates automatically
+   - Make sure your domain's DNS points to your server
+   - Caddy will automatically obtain and renew certificates from Let's Encrypt
+   - For development, Caddy generates self-signed certificates
+   - To use a custom certificate:
+
+   ```caddy
+   your-domain.com {
+       tls /path/to/cert.pem /path/to/key.pem
+       # ...rest of configuration...
+   }
+   ```
+
+After making these changes:
+
+1. Rebuild the containers:
+
+   ```bash
+   docker compose down && docker compose up --build -d
+   ```
+
+2. Clear your browser cache if the changes don't appear immediately
+
 ## Documentation
 
 - [GPU Support Guide](docs/GPU_SUPPORT.md): Detailed GPU configuration instructions
