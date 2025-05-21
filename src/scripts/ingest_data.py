@@ -5,12 +5,12 @@ Script to ingest data from CV and markdown files and create a vector store.
 
 import os
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Any
 
-from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader, TextLoader
+from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader, TextLoader, UnstructuredMarkdownLoader
 from langchain_ollama import OllamaEmbeddings
 from langchain_community.vectorstores.faiss import FAISS
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
 
 
@@ -20,6 +20,55 @@ CV_DIR = BASE_DIR / "data" / "cv"
 SKILLS_DIR = BASE_DIR / "data" / "skills_md"
 VECTORSTORE_DIR = BASE_DIR / "data" / "vectorstore"
 
+def get_relative_path(file_path: Path, base_dir: Path) -> str:
+    """Get the relative path from base_dir to file_path."""
+    try:
+        return str(file_path.relative_to(base_dir))
+    except ValueError:
+        return str(file_path)
+
+def load_markdown_with_metadata(file_path: Path, base_dir: Path) -> List[Document]:
+    """
+    Load a markdown file with proper metadata and header-based splitting.
+    
+    Args:
+        file_path (Path): Path to the markdown file
+        base_dir (Path): Base directory for relative path calculation
+        
+    Returns:
+        List[Document]: List of document chunks with metadata
+    """
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # Define headers to split on
+    headers_to_split_on = [
+        ("#", "header1"),
+        ("##", "header2"),
+        ("###", "header3"),
+    ]
+    
+    # Split text based on headers
+    markdown_splitter = MarkdownHeaderTextSplitter(
+        headers_to_split_on=headers_to_split_on
+    )
+    
+    # Get header-based splits
+    docs = markdown_splitter.split_text(content)
+    
+    # Add file metadata to each document
+    relative_path = get_relative_path(file_path, base_dir)
+    category = file_path.parent.name
+    
+    for doc in docs:
+        doc.metadata.update({
+            "source": relative_path,
+            "category": category,
+            "file_type": "markdown",
+            "full_path": str(file_path)
+        })
+    
+    return docs
 
 def load_documents() -> List[Document]:
     """
@@ -30,28 +79,46 @@ def load_documents() -> List[Document]:
     """
     documents = []
 
-    # Load CV documents (PDFs and Markdown)
+    # Load CV documents
     if CV_DIR.exists():
+        # Load PDFs
         for pdf_file in CV_DIR.glob("*.pdf"):
             loader = PyPDFLoader(str(pdf_file))
-            documents.extend(loader.load())
-        for md_file in CV_DIR.glob("*.md"):
-            loader = TextLoader(str(md_file), encoding="utf-8")
-            documents.extend(loader.load())
+            pdf_docs = loader.load()
+            
+            # Add metadata
+            for doc in pdf_docs:
+                doc.metadata.update({
+                    "source": get_relative_path(pdf_file, BASE_DIR),
+                    "category": "cv",
+                    "file_type": "pdf"
+                })
+            documents.extend(pdf_docs)
 
-    # Load skill markdown documents
+        # Load CV markdown
+        for md_file in CV_DIR.glob("*.md"):
+            docs = load_markdown_with_metadata(md_file, BASE_DIR)
+            documents.extend(docs)
+
+    # Load skills markdown documents recursively
     if SKILLS_DIR.exists():
-        for md_file in SKILLS_DIR.glob("*.md"):
-            loader = TextLoader(str(md_file), encoding="utf-8")
-            documents.extend(loader.load())
+        for md_file in SKILLS_DIR.rglob("*.md"):
+            docs = load_markdown_with_metadata(md_file, BASE_DIR)
+            documents.extend(docs)
 
     if not documents:
         print("No documents found in CV or skills directories.")
     else:
-        print(f"Loaded {len(documents)} documents from CV and skills directories.")
+        print(f"Loaded {len(documents)} documents:")
+        # Print summary of loaded documents by category
+        categories = {}
+        for doc in documents:
+            cat = doc.metadata.get("category", "unknown")
+            categories[cat] = categories.get(cat, 0) + 1
+        for cat, count in categories.items():
+            print(f"  - {cat}: {count} documents")
 
     return documents
-
 
 def split_documents(documents: List[Document]) -> List[Document]:
     """
@@ -67,9 +134,12 @@ def split_documents(documents: List[Document]) -> List[Document]:
         chunk_size=500,  # Project standard
         chunk_overlap=50,  # Project standard
         length_function=len,
+        separators=["\n# ", "\n## ", "\n### ", "\n\n", "\n", " ", ""]
     )
-    return text_splitter.split_documents(documents)
-
+    
+    split_docs = text_splitter.split_documents(documents)
+    print(f"Split {len(documents)} documents into {len(split_docs)} chunks")
+    return split_docs
 
 def create_vector_store(documents: List[Document]) -> FAISS:
     """
@@ -83,6 +153,7 @@ def create_vector_store(documents: List[Document]) -> FAISS:
     """
     print("Initializing Ollama embeddings...")
     ollama_base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+    model_name = os.environ.get("MODEL_NAME", "llama3")
     
     # Create a safer wrapper for OllamaEmbeddings that ensures proper input format
     class SafeOllamaEmbeddings(OllamaEmbeddings):
@@ -98,8 +169,8 @@ def create_vector_store(documents: List[Document]) -> FAISS:
     
     # Use the safer wrapper
     embeddings = SafeOllamaEmbeddings(
-        model="llama3",
-        base_url=ollama_base_url,
+        model=model_name,
+        base_url=ollama_base_url
     )
     
     print(f"Using Ollama base URL: {ollama_base_url}")

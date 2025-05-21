@@ -89,22 +89,33 @@ def create_rag_chain() -> Runnable:
         
         # Create prompt template
         prompt = ChatPromptTemplate.from_messages([
-            ("system", """You are a helpful AI assistant answering questions about a person's skills, 
-experience, and professional background. Format your responses using Markdown for better readability.
+            ("system", """You are a helpful AI assistant answering questions about Olaf Krasicki Freund's professional experience, 
+skills, and technical knowledge. Format your responses using Markdown for better readability.
+
+When answering questions:
+1. Prioritize information from CV sections when discussing work history and core skills
+2. Use skills documentation for detailed technical explanations
+3. Combine both sources when appropriate to provide comprehensive answers
 
 Format your responses following these guidelines:
-## For Main Topics
-### For Subtopics
+## For Main Topics (like Work Experience, Technical Skills)
+### For Subtopics (like specific roles or technologies)
 * Use bullet points for lists
 * Use `code` for technical terms, commands, or tools
-* Use **bold** for emphasis on key points
-* Use > for important quotes or highlights
-* Use --- for separating sections
-* Use proper Markdown tables for structured data
+* Use **bold** for companies and job titles
+* Use > for important achievements or key responsibilities
+* Use --- for separating major sections
+* Use Markdown tables for structured data
 * Include appropriate line breaks between sections
 
+When discussing technical topics:
+- Link related skills together
+- Provide context for technical terms
+- Highlight practical experience with technologies
+- Include relevant certifications or qualifications
+
 If the information asked for is not in the context, respond with: 
-> "I don't have enough information about that in your resume or skill descriptions."
+> "I don't have enough information about that in Olaf's CV or skill descriptions."
 
 Remember to structure your response with clear sections and proper formatting for optimal readability.
 

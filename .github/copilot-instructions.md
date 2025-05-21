@@ -163,7 +163,7 @@ Expected environment variables:
 ```env
 OLLAMA_BASE_URL=http://localhost:11434
 VECTOR_STORE_PATH=./data/vectorstore
-MODEL_NAME=llama2
+MODEL_NAME=llama3
 CHUNK_SIZE=500
 CHUNK_OVERLAP=50
 TOP_K_DOCS=3
