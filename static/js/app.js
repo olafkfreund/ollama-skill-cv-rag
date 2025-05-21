@@ -75,7 +75,7 @@ createApp({
             // Validate input
             const trimmedInput = userInput.value.trim();
             if (!trimmedInput || isLoading.value) return;
-            
+
             // Clear any previous error
             errorMessage.value = '';
 
@@ -87,83 +87,49 @@ createApp({
                 timestamp: new Date()
             };
             messages.value.push(userMessage);
-            
-            // Clear input field
             userInput.value = '';
-            
-            // Set loading state
             isLoading.value = true;
-            
-            // Add a temporary loading message
-            const loadingMessageId = Date.now() + 1;
-            messages.value.push({
-                id: loadingMessageId,
-                role: 'assistant',
-                content: 'Thinking...',
-                isLoading: true,
-                timestamp: new Date()
-            });
-            
-            // Focus input for next message
-            if (inputField.value) {
-                inputField.value.focus();
-            }
 
             try {
-                // Make request to API
-                const response = await fetch('/api/chat', {
+                const response = await fetch('/api/ask', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ query: trimmedInput })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: userMessage.content })
                 });
-
-                if (!response.ok) {
-                    throw new Error(`Server responded with status: ${response.status}`);
-                }
-
                 const data = await response.json();
-                
-                // Remove loading message
-                const index = messages.value.findIndex(m => m.id === loadingMessageId);
-                if (index !== -1) {
-                    messages.value.splice(index, 1);
-                }
-                
-                // Add the response message
-                messages.value.push({
-                    id: Date.now() + 2,
-                    role: 'assistant',
-                    content: data.response || 'I\'m sorry, I couldn\'t process that query.',
-                    timestamp: new Date()
-                });
-            } catch (error) {
-                console.error('Error sending message:', error);
-                
-                // Remove loading message
-                const index = messages.value.findIndex(m => m.id === loadingMessageId);
-                if (index !== -1) {
-                    messages.value.splice(index, 1);
-                }
-                
-                // Add an error message
-                errorMessage.value = `Error: ${error.message}`;
-                messages.value.push({
-                    id: Date.now() + 2,
-                    role: 'assistant',
-                    content: 'Sorry, there was an error processing your request. Please try again later.',
-                    timestamp: new Date()
-                });
-            } finally {
                 isLoading.value = false;
-                
-                // Focus back on input field
-                setTimeout(() => {
-                    if (inputField.value) {
-                        inputField.value.focus();
-                    }
-                }, 100);
+                if (data.status === 'error' && data.message && data.message.toLowerCase().includes('reindexing')) {
+                    messages.value.push({
+                        id: Date.now() + 1,
+                        role: 'assistant',
+                        content: '⏳ The system is currently reindexing the knowledge base. Please try again in a few moments.',
+                        timestamp: new Date()
+                    });
+                    return;
+                }
+                if (data.status === 'success' && data.data && data.data.answer) {
+                    messages.value.push({
+                        id: Date.now() + 2,
+                        role: 'assistant',
+                        content: data.data.answer,
+                        timestamp: new Date()
+                    });
+                } else {
+                    messages.value.push({
+                        id: Date.now() + 3,
+                        role: 'assistant',
+                        content: data.message || 'Sorry, something went wrong.',
+                        timestamp: new Date()
+                    });
+                }
+            } catch (error) {
+                isLoading.value = false;
+                messages.value.push({
+                    id: Date.now() + 4,
+                    role: 'assistant',
+                    content: '⚠️ The system is temporarily unavailable. This may be due to reindexing the knowledge base. Please try again in a few moments.',
+                    timestamp: new Date()
+                });
             }
         };
 

@@ -19,6 +19,26 @@ from langchain.schema.runnable import Runnable
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 VECTORSTORE_DIR = BASE_DIR / "data" / "vectorstore" / "faiss_index"
 
+RAG_PROMPT_TEMPLATE = """
+You are an expert assistant helping answer questions about Olaf Krasicki Freund's CV and professional experience. Always present Olaf as a DevOps and SRE professional. Use ONLY the provided context sections from the CV and the skills documentation (from the skills_md folder) to answer the user's question. Do not make up, summarize, or infer any information that is not explicitly present in the context.
+
+- Always include exact names, dates, job titles, company names, and skill names as they appear in the context. Never omit or paraphrase these details.
+- If the answer is found in multiple sections (including both CV and skills_md), synthesize information from all relevant sections, especially sections mentioning Cloud and cloud  infrastruture, but always quote names, dates, titles, and skills exactly as in the context.
+- Prefer recent experience and highlight the most relevant skills and technologies.
+- If a section header is provided (e.g., '## Professional Experience' or a skill name from skills_md), use it to guide your answer.
+- Format all answers to highlight Olaf's DevOps and SRE expertise and values.
+- If you do not know the answer based on the provided context, say "I don't know based on the provided CV and skills documentation."
+- At the end of your answer, provide a short tip for the user on how to ask for more information. For example: "Tip: You can ask about specific roles, skills, or time periods for more detailed answers."
+
+Context:
+{context}
+
+User Question:
+{question}
+
+Answer:
+"""
+
 
 def load_vector_store():
     """
@@ -74,7 +94,7 @@ def create_rag_chain() -> Runnable:
         vector_store = load_vector_store()
         retriever = vector_store.as_retriever(
             search_type="similarity",
-            search_kwargs={"k": 5}  # Retrieve top 5 most relevant chunks
+            search_kwargs={"k": 7}  # Retrieve top 7 most relevant chunks for broader context
         )
         
         # Initialize Ollama model
@@ -83,66 +103,36 @@ def create_rag_chain() -> Runnable:
         
         llm = OllamaLLM(
             model="llama3",
-            temperature=0.1,  # Low temperature for more factual responses
+            temperature=0.0,  # Set to 0.0 for maximum factuality
             base_url=ollama_base_url,
         )
         
         # Create prompt template
         prompt = ChatPromptTemplate.from_messages([
-            ("system", """You are a helpful AI assistant answering questions about Olaf Krasicki Freund's professional experience, 
-skills, and technical knowledge. Format your responses using Markdown for better readability.
-
-When answering questions:
-1. Prioritize information from CV sections when discussing work history and core skills
-2. Use skills documentation for detailed technical explanations
-3. Combine both sources when appropriate to provide comprehensive answers
-
-Format your responses following these guidelines:
-## For Main Topics (like Work Experience, Technical Skills)
-### For Subtopics (like specific roles or technologies)
-* Use bullet points for lists
-* Use `code` for technical terms, commands, or tools
-* Use **bold** for companies and job titles
-* Use > for important achievements or key responsibilities
-* Use --- for separating major sections
-* Use Markdown tables for structured data
-* Include appropriate line breaks between sections
-
-When discussing technical topics:
-- Link related skills together
-- Provide context for technical terms
-- Highlight practical experience with technologies
-- Include relevant certifications or qualifications
-
-If the information asked for is not in the context, respond with: 
-> "I don't have enough information about that in Olaf's CV or skill descriptions."
-
-Remember to structure your response with clear sections and proper formatting for optimal readability.
-
-Context:
-{context}"""),
+            ("system", RAG_PROMPT_TEMPLATE),
             ("human", "{question}")
         ])
         
-        # Define a simple function to format the context
         def format_context_docs(docs):
-            # Handle the case where docs might be unexpected format
             if not docs:
                 return "No relevant context found."
-                
             try:
                 if isinstance(docs, list) and all(hasattr(doc, 'page_content') for doc in docs):
+                    # Log the retrieved context for debugging
+                    print("\n--- Retrieved context for query ---")
+                    for doc in docs:
+                        print(doc.page_content)
+                    print("--- End of context ---\n")
                     return "\n\n".join(doc.page_content for doc in docs)
                 elif isinstance(docs, str):
+                    print(f"\n--- Retrieved context (str) ---\n{docs}\n--- End of context ---\n")
                     return docs
                 else:
-                    # Attempt to convert whatever we got to a string
                     return str(docs)
             except Exception as e:
                 print(f"Error formatting context: {e}")
                 return "Error retrieving context."
         
-        # Build the RAG chain using LCEL with proper input transformations and error handling
         rag_chain = (
             {"context": retriever | format_context_docs, "question": lambda x: x["question"]} 
             | prompt 

@@ -104,18 +104,20 @@ def health_check():
 
 
 @app.post("/ask")
-def ask_question(request: QuestionRequest):
+async def ask(request: Request):
     """
     Endpoint to ask a question about skills and experience.
     
     Args:
-        request (QuestionRequest): The question request
+        request (Request): The request object
         
     Returns:
         JSONResponse: The standardized API response
     """
     try:
-        if not request.query or request.query.strip() == "":
+        data = await request.json()
+        query = data.get("query", "")
+        if not query or query.strip() == "":
             return JSONResponse(
                 status_code=200,  # Always return 200 for frontend compatibility
                 content=create_response(
@@ -125,10 +127,10 @@ def ask_question(request: QuestionRequest):
                 )
             )
             
-        print(f"API received question: {request.query}")
+        print(f"API received question: {query}")
         
         # Get the answer from the RAG pipeline
-        result = answer_question(request.query)
+        result = answer_question(query)
         
         if not result["success"]:
             # Check if we have error details for debugging
@@ -158,6 +160,15 @@ def ask_question(request: QuestionRequest):
                     "answer": result["answer"]
                 },
                 message="Answer generated successfully"
+            )
+        )
+    except FileNotFoundError:
+        return JSONResponse(
+            status_code=200,  # Always return 200 for frontend compatibility
+            content=create_response(
+                status="error",
+                data={},
+                message="The system is currently reindexing the knowledge base. Please try again in a few moments."
             )
         )
     except Exception as e:

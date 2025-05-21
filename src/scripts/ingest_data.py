@@ -73,13 +73,14 @@ def load_markdown_with_metadata(file_path: Path, base_dir: Path) -> List[Documen
 
 def chunk_markdown_by_section(md_text: str) -> List[Dict[str, Any]]:
     """
-    Chunk markdown text by section headers (##) and attach section header as metadata.
+    Chunk markdown text by section headers (## and ###) and attach section header as metadata.
     Args:
         md_text: The markdown text to chunk.
     Returns:
         List of dicts with 'content' and 'metadata' (section header).
     """
-    sections = re.split(r'(^## .+$)', md_text, flags=re.MULTILINE)
+    # Split by both ## and ### headers
+    sections = re.split(r'(^##+ .+$)', md_text, flags=re.MULTILINE)
     chunks = []
     for i in range(1, len(sections), 2):
         header = sections[i].strip()
