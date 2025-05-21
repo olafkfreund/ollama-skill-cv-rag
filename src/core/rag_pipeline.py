@@ -175,25 +175,57 @@ def create_rag_chain() -> Runnable:
         raise
 
 
+def is_cv_query(question: str) -> bool:
+    """
+    Detect if the user query is a request to show the CV or resume.
+    Args:
+        question (str): The user query
+    Returns:
+        bool: True if the query is about the CV, False otherwise
+    """
+    cv_keywords = [
+        r"\bcv\b", r"curriculum vitae", r"resume", r"show.*cv", r"show.*resume", r"see.*cv", r"see.*resume",
+        r"your cv", r"your resume", r"full cv", r"full resume", r"download.*cv", r"download.*resume"
+    ]
+    q = question.lower()
+    return any(re.search(pattern, q) for pattern in cv_keywords)
+
+
+def get_full_cv_markdown() -> str:
+    """
+    Return the full CV markdown as a string.
+    """
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    cv_path = base_dir / "data" / "cv" / "cv.md"
+    if not cv_path.exists():
+        return "CV file not found."
+    try:
+        with open(cv_path, mode="r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        print(f"[ERROR] Failed to read CV file: {e}")
+        return "Error reading CV file."
+
+
 def answer_question(question: str) -> Dict[str, Any]:
     """
-    Answer a question using the RAG pipeline.
-    
+    Answer a question using the RAG pipeline, or return the full CV if the query is about the CV.
     Args:
         question (str): The question to answer
-        
     Returns:
         Dict[str, Any]: A dictionary containing the question and answer
     """
     try:
         print(f"Processing question: {question}")
-        
-        # Create RAG chain if not already created
+        if is_cv_query(question):
+            cv_md = get_full_cv_markdown()
+            return {
+                "question": question,
+                "answer": cv_md,
+                "success": True
+            }
         rag_chain = create_rag_chain()
-        
-        # Generate answer
         answer = rag_chain.invoke({"question": question})
-        
         return {
             "question": question,
             "answer": answer,
@@ -201,7 +233,6 @@ def answer_question(question: str) -> Dict[str, Any]:
         }
     except Exception as e:
         print(f"Error answering question: {str(e)}")
-        # Provide a more user-friendly error message
         error_message = "I encountered an issue processing your question. This could be due to a temporary problem with the language model or the retrieval system."
         if "validation error" in str(e).lower():
             print("Validation error detected, likely an issue with the embeddings API")
