@@ -57,6 +57,7 @@
                             <div class="message-content">
                                 <div class="message-time" v-if="message.timestamp">{{ formatTime(message.timestamp) }}</div>
                                 <div v-html="renderMarkdown(message.content)"></div>
+                                <tts-button v-if="message.role === 'assistant'" :text="message.content"></tts-button>
                             </div>
                         </div>
                         <div class="scroll-indicator" v-if="showScrollIndicator" @click="scrollToBottom">

@@ -1,7 +1,7 @@
 // CV RAG System with Vue.js
 const { createApp, ref, computed, onMounted, watch } = Vue;
 
-createApp({
+const app = createApp({
     setup() {
         // Core data
         const messages = ref([]);
@@ -147,4 +147,87 @@ createApp({
             renderMarkdown // expose to template
         };
     }
-}).mount('#app');
+});
+
+// Function to play TTS
+function playTTS(text) {
+    if (!text) return;
+    const btn = event?.target;
+    if (btn) btn.disabled = true;
+    fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('TTS request failed');
+            return response.blob();
+        })
+        .then(audioBlob => {
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            audio.onended = () => { if (btn) btn.disabled = false; };
+            audio.onerror = () => { if (btn) btn.disabled = false; };
+            audio.play();
+        })
+        .catch(() => { if (btn) btn.disabled = false; });
+}
+
+// Global Vue component for TTS button
+app.component('tts-button', {
+    props: ['text'],
+    template: `<button class="tts-btn" @click="play" :disabled="loading"><span v-if="loading">🔄</span><span v-else>🔊 Listen</span></button>`,
+    data() { return { loading: false }; },
+    methods: {
+        play() {
+            if (!this.text || this.loading) return;
+            this.loading = true;
+            console.log('[TTS] Sending request to /api/tts:', this.text);
+            fetch('/api/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: this.text })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error('[TTS] Response not OK:', response.status, response.statusText);
+                        throw new Error('TTS request failed: ' + response.status);
+                    }
+                    return response.blob();
+                })
+                .then(audioBlob => {
+                    console.log('[TTS] Received audio blob:', audioBlob);
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    audio.onended = () => { this.loading = false; };
+                    audio.onerror = (e) => {
+                        this.loading = false;
+                        alert('Audio playback failed.');
+                        console.error('[TTS] Audio playback error:', e);
+                    };
+                    audio.play().catch(e => {
+                        this.loading = false;
+                        alert('Audio playback failed.');
+                        console.error('[TTS] Audio play() error:', e);
+                    });
+                })
+                .catch((err) => {
+                    this.loading = false;
+                    alert('TTS request failed: ' + err.message);
+                    console.error('[TTS] Fetch error:', err);
+                });
+        }
+    }
+});
+
+// Patch message rendering to include the TTS button for each assistant message
+const origRender = app.config.globalProperties.renderMarkdown;
+app.config.globalProperties.renderMarkdown = function(text, message) {
+    let html = origRender ? origRender.call(this, text) : text;
+    if (message && message.role === 'assistant') {
+        html += `<tts-button :text="${JSON.stringify(message.content)}"></tts-button>`;
+    }
+    return html;
+};
+
+app.mount('#app');

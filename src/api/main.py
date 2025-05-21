@@ -7,19 +7,24 @@ import os
 from pathlib import Path
 from typing import Dict, Any
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-try:
-    import uvicorn
-except ImportError:
-    uvicorn = None
-
 from src.core.rag_pipeline import answer_question
+from src.backend.api import tts
+
+app = FastAPI(
+    title="Personal Skills RAG System",
+    description="A RAG system that answers questions about my skills and experience",
+    version="1.0.0"
+)
+
+# Register the TTS router with prefix /api so /api/tts is available
+app.include_router(tts.router, prefix="/api")
 
 
 def create_response(status: str, data: Any, message: str) -> Dict[str, Any]:
@@ -40,13 +45,6 @@ def create_response(status: str, data: Any, message: str) -> Dict[str, Any]:
         "message": message
     }
 
-
-# Initialize FastAPI app
-app = FastAPI(
-    title="Personal Skills RAG System",
-    description="A RAG system that answers questions about my skills and experience",
-    version="1.0.0"
-)
 
 # Define base directories
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -103,7 +101,9 @@ def health_check():
     return {"status": "healthy"}
 
 
-@app.post("/ask")
+api_router = APIRouter()
+
+@api_router.post("/ask")
 async def ask(request: Request):
     """
     Endpoint to ask a question about skills and experience.
@@ -182,8 +182,7 @@ async def ask(request: Request):
             )
         )
 
-
-@app.post("/chat")
+@api_router.post("/chat")
 async def chat(request: Request):
     """
     Endpoint for the chat interface.
@@ -221,7 +220,8 @@ async def chat(request: Request):
             content={"response": f"An error occurred: {str(e)}"}
         )
 
-
+# Register the API router with prefix /api
+app.include_router(api_router, prefix="/api")
 
 
 # Optional: Add a simple HTML interface
