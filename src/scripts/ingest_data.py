@@ -4,6 +4,7 @@ Script to ingest data from CV and markdown files and create a vector store.
 """
 
 import os
+import re
 from pathlib import Path
 from typing import List, Dict, Any
 
@@ -69,6 +70,22 @@ def load_markdown_with_metadata(file_path: Path, base_dir: Path) -> List[Documen
         })
     
     return docs
+
+def chunk_markdown_by_section(md_text: str) -> List[Dict[str, Any]]:
+    """
+    Chunk markdown text by section headers (##) and attach section header as metadata.
+    Args:
+        md_text: The markdown text to chunk.
+    Returns:
+        List of dicts with 'content' and 'metadata' (section header).
+    """
+    sections = re.split(r'(^## .+$)', md_text, flags=re.MULTILINE)
+    chunks = []
+    for i in range(1, len(sections), 2):
+        header = sections[i].strip()
+        content = sections[i+1].strip()
+        chunks.append({'content': f'{header}\n{content}', 'metadata': {'section': header}})
+    return chunks
 
 def load_documents() -> List[Document]:
     """
