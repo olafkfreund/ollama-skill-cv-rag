@@ -34,6 +34,14 @@ createApp({
             return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         };
 
+        // Markdown rendering for assistant messages
+        const renderMarkdown = (mdText) => {
+            if (window.marked && window.DOMPurify) {
+                return DOMPurify.sanitize(marked.parse(mdText));
+            }
+            return mdText;
+        };
+
         onMounted(() => {
             // Add a welcome message when the app loads
             messages.value.push({
@@ -169,7 +177,8 @@ createApp({
             errorMessage,
             showScrollIndicator,
             scrollToBottom,
-            formatTime
+            formatTime,
+            renderMarkdown // expose to template
         };
     }
 }).mount('#app');

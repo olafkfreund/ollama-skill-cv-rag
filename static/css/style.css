@@ -237,6 +237,10 @@ body.gruvbox-dark {
 }
 
 .chat-container {
+    width: 90vw;
+    max-width: 1100px;
+    min-width: 320px;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -246,6 +250,13 @@ body.gruvbox-dark {
     border: 2px solid var(--gruvbox-aqua);
     overflow: hidden;
     transition: box-shadow var(--transition-normal);
+}
+
+@media (min-width: 1400px) {
+    .chat-container {
+        width: 70vw;
+        max-width: 1200px;
+    }
 }
 
 .chat-container:hover {
@@ -340,10 +351,46 @@ body.gruvbox-dark {
 }
 
 .message.assistant .message-content {
-    background: var(--gruvbox-green);
-    color: var(--gruvbox-bg-darker);
+    background: var(--gruvbox-bg-lighter); /* darker background for assistant answer box */
+    color: var(--gruvbox-fg);
     border: 1px solid var(--gruvbox-green-light);
     border-radius: 0 var(--border-radius-md) var(--border-radius-md) var(--border-radius-md);
+}
+
+/* Markdown styling for chat messages */
+.message-content h1, .message-content h2, .message-content h3 {
+    color: var(--gruvbox-yellow);
+    margin: 0.5em 0 0.2em 0;
+}
+.message-content p {
+    margin: 0.5em 0;
+}
+.message-content ul, .message-content ol {
+    margin: 0.5em 0 0.5em 1.5em;
+}
+.message-content code {
+    background: var(--gruvbox-bg-lighter);
+    color: var(--gruvbox-orange);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+}
+.message-content pre {
+    background: var(--gruvbox-bg-lighter);
+    color: var(--gruvbox-orange);
+    padding: 10px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 0.5em 0;
+}
+.message-content blockquote {
+    border-left: 4px solid var(--gruvbox-yellow);
+    background: var(--gruvbox-bg-lighter);
+    color: var(--gruvbox-fg-muted);
+    margin: 0.5em 0;
+    padding: 0.5em 1em;
+    border-radius: 4px;
 }
 
 .input-container {
@@ -515,15 +562,26 @@ body.gruvbox-dark {
 }
 
 .chat-container {
-    max-width: 600px;
-    margin: 20px auto 40px auto;
+    width: 90vw;
+    max-width: 1100px;
+    min-width: 320px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     background: var(--gruvbox-bg-soft);
-    border-radius: 14px;
-    box-shadow: 0 4px 32px 0 rgba(40,40,40,0.25);
-    padding: 0 0 16px 0;
-    border: 2px solid var(--gruvbox-yellow);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 2px solid var(--gruvbox-aqua);
     overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: box-shadow var(--transition-normal);
+}
+
+@media (min-width: 1400px) {
+    .chat-container {
+        width: 70vw;
+        max-width: 1200px;
+    }
 }
 
 .chat-container:hover {
@@ -574,11 +632,47 @@ body.gruvbox-dark {
 }
 
 .message.assistant {
-    background: var(--gruvbox-green);
-    color: var(--gruvbox-bg);
+    background: var(--gruvbox-bg-lighter); /* darker background for assistant answer box */
+    color: var(--gruvbox-fg);
     margin-right: auto;
     border-color: var(--gruvbox-green);
     box-shadow: 0 2px 8px 0 rgba(152,151,26,0.10);
+}
+
+/* Markdown styling for chat messages */
+.message-content h1, .message-content h2, .message-content h3 {
+    color: var(--gruvbox-yellow);
+    margin: 0.5em 0 0.2em 0;
+}
+.message-content p {
+    margin: 0.5em 0;
+}
+.message-content ul, .message-content ol {
+    margin: 0.5em 0 0.5em 1.5em;
+}
+.message-content code {
+    background: var(--gruvbox-bg-lighter);
+    color: var(--gruvbox-orange);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+}
+.message-content pre {
+    background: var(--gruvbox-bg-lighter);
+    color: var(--gruvbox-orange);
+    padding: 10px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 0.5em 0;
+}
+.message-content blockquote {
+    border-left: 4px solid var(--gruvbox-yellow);
+    background: var(--gruvbox-bg-lighter);
+    color: var(--gruvbox-fg-muted);
+    margin: 0.5em 0;
+    padding: 0.5em 1em;
+    border-radius: 4px;
 }
 
 .input-container {
