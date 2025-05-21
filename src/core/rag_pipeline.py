@@ -5,7 +5,9 @@ RAG pipeline implementation for retrieving context and generating answers.
 
 import os
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
+import re
+import aiofiles
 
 from langchain_ollama import OllamaEmbeddings
 from langchain_ollama import OllamaLLM
@@ -22,13 +24,40 @@ VECTORSTORE_DIR = BASE_DIR / "data" / "vectorstore" / "faiss_index"
 RAG_PROMPT_TEMPLATE = """
 You are an expert assistant helping answer questions about Olaf Krasicki Freund's CV and professional experience. Always present Olaf as a DevOps and SRE professional. Use ONLY the provided context sections from the CV and the skills documentation (from the skills_md folder) to answer the user's question. Do not make up, summarize, or infer any information that is not explicitly present in the context.
 
+When answering questions:
+1. Prioritize information from CV sections when discussing work history and core skills
+2. Use skills documentation for detailed technical explanations
+3. Combine both sources when appropriate to provide comprehensive answers
+
+Format your responses following these guidelines:
+## For Main Topics (like Work Experience, Technical Skills)
+### For Subtopics (like specific roles or technologies)
+* Use bullet points for lists
+* Use `code` for technical terms, commands, or tools
+* Use **bold** for companies and job titles
+* Use > for important achievements or key responsibilities
+* Use --- for separating major sections
+* Use Markdown tables for structured data
+* Include appropriate line breaks between sections
+
+When discussing technical topics:
+- Link related skills together
+- Provide context for technical terms
+- Highlight practical experience with technologies
+- Include relevant certifications or qualifications
+
+If the information asked for is not in the context, respond with: 
+> "I don't have enough information about that in Olaf's CV or skill descriptions."
+
+Remember to structure your response with clear sections and proper formatting for optimal readability.
 - Always include exact names, dates, job titles, company names, and skill names as they appear in the context. Never omit or paraphrase these details.
-- If the answer is found in multiple sections (including both CV and skills_md), synthesize information from all relevant sections, especially sections mentioning Cloud and cloud  infrastruture, but always quote names, dates, titles, and skills exactly as in the context.
+- If the answer is found in multiple sections (including both CV and skills_md), synthesize information from all relevant sections, but always quote names, dates, titles, and skills exactly as in the context.
 - Prefer recent experience and highlight the most relevant skills and technologies.
 - If a section header is provided (e.g., '## Professional Experience' or a skill name from skills_md), use it to guide your answer.
+- If the context includes code examples, always include them in your answer using Markdown code blocks.
 - Format all answers to highlight Olaf's DevOps and SRE expertise and values.
 - If you do not know the answer based on the provided context, say "I don't know based on the provided CV and skills documentation."
-- At the end of your answer, provide a short tip for the user on how to ask for more information. For example: "Tip: You can ask about specific roles, skills, or time periods for more detailed answers."
+- At the end of your answer, provide a short tip for the user on how to ask for more information. For example: "Tip: You can ask about specific roles, skills, time periods, or request code examples for more detailed answers. Try asking: 'Show me a code example for Terraform automation.'or have a look at https://freundcloud.gitbook.io/devops-examples-from-real-life"
 
 Context:
 {context}
@@ -184,3 +213,46 @@ def answer_question(question: str) -> Dict[str, Any]:
             "success": False,
             "error_details": str(e)  # Include the technical details for debugging
         }
+
+
+async def list_all_cv_entries() -> str:
+    """
+    Extract and format all professional experience entries from the CV markdown.
+    Returns:
+        A Markdown-formatted string listing all professional experience entries.
+    """
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    cv_path = base_dir / "data" / "cv" / "cv.md"
+    if not cv_path.exists():
+        return "CV file not found."
+    async with aiofiles.open(cv_path, mode="r", encoding="utf-8") as f:
+        cv_markdown = await f.read()
+    # Extract the Professional Experience section
+    match = re.search(r"## Professional Experience(.+?)(\n## |\Z)", cv_markdown, re.DOTALL)
+    if not match:
+        return "No professional experience section found in the CV."
+    section = match.group(1)
+    # Ensure all entries start with '###'
+    entries = re.findall(r"(### .+?)(?=\n### |\Z)", section, re.DOTALL)
+    if not entries:
+        # fallback: return the whole section if no '###' found
+        return f"## Professional Experience\n{section.strip()}"
+    formatted = "\n\n".join(entry.strip() for entry in entries)
+    return f"## Professional Experience\n\n{formatted}"
+
+
+async def generate_response(query: str, context: List[Dict[str, Any]] = None) -> str:
+    """
+    Generate a response using the RAG pipeline. If the query is for the full CV, return all entries.
+    Args:
+        query: User query
+        context: Retrieved documents (optional)
+    Returns:
+        Generated response
+    """
+    cv_keywords = [
+        "show me your cv", "list all professional experience", "show all cv entries", "full cv", "all roles", "all jobs", "all experience", "cv entries", "cv", "professional experience"
+    ]
+    if any(k in query.lower() for k in cv_keywords):
+        return await list_all_cv_entries()
+    # ...existing RAG pipeline code...
