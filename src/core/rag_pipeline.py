@@ -47,7 +47,7 @@ When discussing technical topics:
 - Include relevant certifications or qualifications
 
 If the information asked for is not in the context, respond with: 
-> "I don't have enough information about that in Olaf's CV or skill descriptions."
+> "I don't have enough information about that in Olaf's CV or skill descriptions.But if you have a look at https://freundcloud.gitbook.io/devops-examples-from-real-life"
 
 Remember to structure your response with clear sections and proper formatting for optimal readability.
 - Always include exact names, dates, job titles, company names, and skill names as they appear in the context. Never omit or paraphrase these details.
@@ -225,25 +225,79 @@ async def list_all_cv_entries() -> str:
     cv_path = base_dir / "data" / "cv" / "cv.md"
     if not cv_path.exists():
         return "CV file not found."
-    async with aiofiles.open(cv_path, mode="r", encoding="utf-8") as f:
-        cv_markdown = await f.read()
+    try:
+        async with aiofiles.open(cv_path, mode="r", encoding="utf-8") as f:
+            cv_markdown = await f.read()
+    except Exception as e:
+        print(f"[ERROR] Failed to read CV file: {e}")
+        return "Error reading CV file."
+    # Debug: print the first 500 characters of the CV markdown
+    print("[DEBUG] Loaded CV markdown (first 500 chars):", cv_markdown[:500])
     # Extract the Professional Experience section
     match = re.search(r"## Professional Experience(.+?)(\n## |\Z)", cv_markdown, re.DOTALL)
     if not match:
+        print("[DEBUG] No professional experience section found in the CV.")
         return "No professional experience section found in the CV."
     section = match.group(1)
+    # Debug: print the section
+    print("[DEBUG] Professional Experience section (first 500 chars):", section[:500])
     # Ensure all entries start with '###'
     entries = re.findall(r"(### .+?)(?=\n### |\Z)", section, re.DOTALL)
     if not entries:
-        # fallback: return the whole section if no '###' found
+        print("[DEBUG] No '###' entries found, returning whole section.")
         return f"## Professional Experience\n{section.strip()}"
     formatted = "\n\n".join(entry.strip() for entry in entries)
+    print(f"[DEBUG] Found {len(entries)} entries.")
     return f"## Professional Experience\n\n{formatted}"
 
+async def list_cv_section(section_name: str) -> str:
+    """
+    Extract and format a specific section from the CV markdown.
+    Args:
+        section_name: The section header to extract (e.g., 'Core Competencies & Technical Skills')
+    Returns:
+        A Markdown-formatted string of the section, or an error message.
+    """
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    cv_path = base_dir / "data" / "cv" / "cv.md"
+    if not cv_path.exists():
+        return f"CV file not found."
+    try:
+        async with aiofiles.open(cv_path, mode="r", encoding="utf-8") as f:
+            cv_markdown = await f.read()
+    except Exception as e:
+        print(f"[ERROR] Failed to read CV file: {e}")
+        return "Error reading CV file."
+    # Extract the requested section
+    pattern = rf"## {re.escape(section_name)}(.+?)(\n## |\Z)"
+    match = re.search(pattern, cv_markdown, re.DOTALL)
+    if not match:
+        print(f"[DEBUG] No section '{section_name}' found in the CV.")
+        return f"No section '{section_name}' found in the CV."
+    section = match.group(1)
+    return f"## {section_name}\n{section.strip()}"
+
+async def list_cv_full() -> str:
+    """
+    Return the full CV markdown content.
+    Returns:
+        The full CV as a Markdown-formatted string, or an error message.
+    """
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    cv_path = base_dir / "data" / "cv" / "cv.md"
+    if not cv_path.exists():
+        return "CV file not found."
+    try:
+        async with aiofiles.open(cv_path, mode="r", encoding="utf-8") as f:
+            cv_markdown = await f.read()
+    except Exception as e:
+        print(f"[ERROR] Failed to read CV file: {e}")
+        return "Error reading CV file."
+    return cv_markdown
 
 async def generate_response(query: str, context: List[Dict[str, Any]] = None) -> str:
     """
-    Generate a response using the RAG pipeline. If the query is for the full CV, return all entries.
+    Generate a response using the RAG pipeline. If the query is for the full CV or a section, return the relevant content.
     Args:
         query: User query
         context: Retrieved documents (optional)
@@ -253,6 +307,18 @@ async def generate_response(query: str, context: List[Dict[str, Any]] = None) ->
     cv_keywords = [
         "show me your cv", "list all professional experience", "show all cv entries", "full cv", "all roles", "all jobs", "all experience", "cv entries", "cv", "professional experience"
     ]
-    if any(k in query.lower() for k in cv_keywords):
+    section_keywords = [
+        "core competencies", "technical skills", "summary", "volunteering", "languages", "interests"
+    ]
+    q_lower = query.lower()
+    if any(k in q_lower for k in cv_keywords):
+        # If user asks for the full CV, return all professional experience entries
         return await list_all_cv_entries()
+    for section in section_keywords:
+        if section in q_lower:
+            # Return the requested section
+            pretty_section = section.title() if section != "core competencies" else "Core Competencies & Technical Skills"
+            return await list_cv_section(pretty_section)
+    if "full cv" in q_lower or "entire cv" in q_lower or "complete cv" in q_lower:
+        return await list_cv_full()
     # ...existing RAG pipeline code...
