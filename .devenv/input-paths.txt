@@ -1,8 +1,8 @@
-/home/olafkfreund/Source/RAG/ollama-rag/.devenv/flake.json
-/home/olafkfreund/Source/RAG/ollama-rag/.devenv.flake.nix
-/home/olafkfreund/Source/RAG/ollama-rag/.env
-/home/olafkfreund/Source/RAG/ollama-rag/devenv.local.nix
-/home/olafkfreund/Source/RAG/ollama-rag/devenv.lock
-/home/olafkfreund/Source/RAG/ollama-rag/devenv.nix
-/home/olafkfreund/Source/RAG/ollama-rag/devenv.yaml
-/home/olafkfreund/Source/RAG/ollama-rag/requirements.txt
+/home/olafkfreund/Source/RAG/ollama-skill-cv-rag/.devenv/flake.json
+/home/olafkfreund/Source/RAG/ollama-skill-cv-rag/.devenv.flake.nix
+/home/olafkfreund/Source/RAG/ollama-skill-cv-rag/.env
+/home/olafkfreund/Source/RAG/ollama-skill-cv-rag/devenv.local.nix
+/home/olafkfreund/Source/RAG/ollama-skill-cv-rag/devenv.lock
+/home/olafkfreund/Source/RAG/ollama-skill-cv-rag/devenv.nix
+/home/olafkfreund/Source/RAG/ollama-skill-cv-rag/devenv.yaml
+/home/olafkfreund/Source/RAG/ollama-skill-cv-rag/requirements.txt

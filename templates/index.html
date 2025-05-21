@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Olaf K-Freund | Skills CV Assistant</title>
+    <meta name="description" content="Chat with Olaf K-Freund's AI assistant about his skills, experience, and qualifications.">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="gruvbox-dark">
+    <div id="app">
+        <div class="app-container">
+            <div class="profile-section">
+                <div class="profile-container">
+                    <div class="profile-image-wrapper">
+                        <img src="/assets/profile_pictures.jpg" alt="Olaf K-Freund" class="profile-picture">
+                    </div>
+                    <div class="profile-info">
+                        <h1 class="profile-caption">Olaf K-Freund</h1>
+                        <p class="profile-tagline">Cloud | DevOps | AI/ML Specialist</p>
+                        <div class="profile-badges">
+                            <span class="badge"><i class="fas fa-cloud"></i> Azure</span>
+                            <span class="badge"><i class="fas fa-cogs"></i> DevOps</span>
+                            <span class="badge"><i class="fas fa-robot"></i> AI/ML</span>
+                        </div>
+                    </div>
+                    <div class="profile-description">
+                        <p>Ask me about my skills, experience, and qualifications. The AI assistant will answer based on my CV and knowledge base.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-section">
+                <div class="chat-container">
+                    <div class="header">
+                        <div class="header-left">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="header-title">Skills & Experience Assistant</div>
+                        <div class="header-right">
+                            <span class="status-indicator online" title="Online"><i class="fas fa-circle"></i></span>
+                        </div>
+                    </div>
+                    <div class="messages" ref="messageContainer">
+                        <div v-for="message in messages" :key="message.id" 
+                            :class="['message', message.role, { 'isLoading': message.isLoading }]">
+                            <div class="message-avatar" v-if="message.role === 'assistant'">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-avatar" v-if="message.role === 'user'">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="message-content">
+                                <div class="message-time" v-if="message.timestamp">{{ formatTime(message.timestamp) }}</div>
+                                <div class="message-text" v-html="message.content.replace(/\n/g, '<br>')"></div>
+                            </div>
+                        </div>
+                        <div class="scroll-indicator" v-if="showScrollIndicator" @click="scrollToBottom">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                    </div>
+                    <div class="input-container">
+                        <input 
+                            type="text" 
+                            v-model="userInput" 
+                            @keyup.enter="sendMessage" 
+                            placeholder="Ask about Olaf's skills and experience..." 
+                            :disabled="isLoading"
+                            ref="inputField"
+                        >
+                        <button @click="sendMessage" :disabled="isLoading || !userInput.trim()" class="send-button" :class="{ 'active': userInput.trim() }">
+                            <i class="fas fa-paper-plane" v-if="!isLoading"></i>
+                            <i class="fas fa-spinner fa-spin" v-else></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <p>CV RAG System using Ollama & LangChain | <i class="fas fa-palette"></i> Gruvbox Theme</p>
+        </div>
+    </div>
+    <script src="https://unpkg.com/vue@3"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

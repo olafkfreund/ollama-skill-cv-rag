@@ -9,7 +9,7 @@ from typing import Dict, Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
@@ -52,9 +52,16 @@ app = FastAPI(
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 templates_dir = BASE_DIR / "templates"
 static_dir = BASE_DIR / "static"
+assets_dir = BASE_DIR / "assets"
 
-# Mount static files and templates
+# Static files and templates
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+# Only mount assets if the directory exists
+if assets_dir.exists():
+    app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+else:
+    print(f"Warning: Assets directory '{assets_dir}' does not exist, skipping mount")
 templates = Jinja2Templates(directory=str(templates_dir))
 
 # Add CORS middleware to allow requests from a frontend
@@ -81,7 +88,13 @@ class AnswerResponse(BaseModel):
 @app.get("/")
 async def read_root(request: Request):
     """Root endpoint that returns the web interface."""
-    return templates.TemplateResponse("index.html", {"request": request})
+    try:
+        # Try to use the templates directory first
+        return templates.TemplateResponse("index.html", {"request": request})
+    except Exception as e:
+        print(f"Error rendering template: {e}")
+        # Fallback to returning the static index.html file
+        return FileResponse(static_dir / "index.html")
 
 
 @app.get("/health")
@@ -159,12 +172,54 @@ def ask_question(request: QuestionRequest):
         )
 
 
+@app.post("/chat")
+async def chat(request: Request):
+    """
+    Endpoint for the chat interface.
+    
+    Args:
+        request (Request): The request object
+        
+    Returns:
+        JSONResponse: The response with the answer
+    """
+    try:
+        # Parse the request body
+        body = await request.json()
+        query = body.get("query", "")
+        
+        if not query or query.strip() == "":
+            return JSONResponse(
+                content={"response": "Please enter a question."}
+            )
+            
+        # Process the query through the RAG pipeline
+        result = answer_question(query)
+        
+        if not result["success"]:
+            return JSONResponse(
+                content={"response": result["answer"] or "I couldn't process that query."}
+            )
+            
+        return JSONResponse(
+            content={"response": result["answer"]}
+        )
+    except Exception as e:
+        print(f"Error in chat endpoint: {str(e)}")
+        return JSONResponse(
+            content={"response": f"An error occurred: {str(e)}"}
+        )
+
+
+
+
 # Optional: Add a simple HTML interface
 try:
     # Create directory for static files and templates if they don't exist
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
     static_dir = BASE_DIR / "static"
     templates_dir = BASE_DIR / "templates"
+    assets_dir = BASE_DIR / "assets"
     
     os.makedirs(static_dir, exist_ok=True)
     os.makedirs(templates_dir, exist_ok=True)
@@ -315,6 +370,7 @@ try:
     # Mount static files and templates
     templates = Jinja2Templates(directory=str(templates_dir))
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+    app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
     
     # Add a route for the HTML interface
     @app.get("/chat", include_in_schema=False)
@@ -337,7 +393,7 @@ def start():
     uvicorn.run(
         "src.api.main:app",
         host="0.0.0.0",
-        port=8000,
+        port=8080,
         reload=True
     )
 

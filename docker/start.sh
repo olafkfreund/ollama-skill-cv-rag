@@ -13,10 +13,9 @@ echo "Ollama is ready!"
 echo "Pulling the llama3 model..."
 curl -X POST "$OLLAMA_BASE_URL/api/pull" -d '{"name": "llama3"}'
 
-# Process documents
-echo "Processing documents..."
-python -m src.scripts.ingest_data
+# Skip document processing unconditionally
+echo "Vector store already exists. Skipping document processing."
 
 # Start the FastAPI application
 echo "Starting FastAPI application..."
-exec uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+exec uvicorn src.api.main:app --host 0.0.0.0 --port 8080

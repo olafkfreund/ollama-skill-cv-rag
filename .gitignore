@@ -35,8 +35,8 @@ ENV/
 
 # Project specific
 data/vectorstore/
-static/
-templates/
+# static/
+# templates/
 
 # Nix
 .direnv/

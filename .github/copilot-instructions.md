@@ -158,17 +158,6 @@ This is a Retrieval Augmented Generation (RAG) system using Ollama, LangChain, a
 - Set up proper logging
 - Configure resource limits
 
-## Environment Variables
-Expected environment variables:
-```env
-OLLAMA_BASE_URL=http://localhost:11434
-VECTOR_STORE_PATH=./data/vectorstore
-MODEL_NAME=llama3
-CHUNK_SIZE=500
-CHUNK_OVERLAP=50
-TOP_K_DOCS=3
-TEMPERATURE=0.7
-```
 
 ## Common Functions
 
@@ -241,4 +230,4 @@ def create_response(
 - Follow the established project structure
 - Use devenv for development environment setup
 - You are an agent - please keep going until the user’s query is completely resolved, before ending your turn and yielding back to the user. Only terminate your turn when you are sure that the problem is solved.
--If you are not sure about file content or codebase structure pertaining to the user’s request, use your tools to read files and gather the relevant information: do NOT guess or make up an answer.
+- If you are not sure about file content or codebase structure pertaining to the user’s request, use your tools to read files and gather the relevant information: do NOT guess or make up an answer.

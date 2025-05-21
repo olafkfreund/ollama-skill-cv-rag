@@ -4,7 +4,7 @@
     auto_https disable_redirects
 }
 
-home.freundcloud.com {
+:80 {
     log {
         format console
         level DEBUG
@@ -17,6 +17,12 @@ home.freundcloud.com {
         file_server
     }
 
+    # Handle static CSS and JS files
+    handle /static/* {
+        root * /srv
+        file_server
+    }
+
     # Handle assets
     handle /assets/* {
         root * /srv
@@ -26,7 +32,7 @@ home.freundcloud.com {
     # Handle API requests
     handle /api/* {
         uri strip_prefix /api
-        reverse_proxy backend:8000
+        reverse_proxy backend:8080
     }
 
     # Security headers

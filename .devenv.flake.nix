@@ -3,12 +3,12 @@
     let
       version = "1.6.1";
 system = "x86_64-linux";
-devenv_root = "/home/olafkfreund/Source/RAG/ollama-rag";
+devenv_root = "/home/olafkfreund/Source/RAG/ollama-skill-cv-rag";
 devenv_dotfile = ./.devenv;
 devenv_dotfile_string = ".devenv";
 container_name = null;
 devenv_tmpdir = "/run/user/1000";
-devenv_runtime = "/run/user/1000/devenv-a8de036";
+devenv_runtime = "/run/user/1000/devenv-ae88bd9";
 devenv_istesting = false;
 devenv_direnvrc_latest_version = 1;
 
@@ -26,12 +26,12 @@ devenv_direnvrc_latest_version = 1;
         let
           version = "1.6.1";
 system = "x86_64-linux";
-devenv_root = "/home/olafkfreund/Source/RAG/ollama-rag";
+devenv_root = "/home/olafkfreund/Source/RAG/ollama-skill-cv-rag";
 devenv_dotfile = ./.devenv;
 devenv_dotfile_string = ".devenv";
 container_name = null;
 devenv_tmpdir = "/run/user/1000";
-devenv_runtime = "/run/user/1000/devenv-a8de036";
+devenv_runtime = "/run/user/1000/devenv-ae88bd9";
 devenv_istesting = false;
 devenv_direnvrc_latest_version = 1;
 
