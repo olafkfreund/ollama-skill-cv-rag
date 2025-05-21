@@ -17,24 +17,39 @@ This project implements a Retrieval Augmented Generation (RAG) system using Olla
 The system works by:
 
 1. Loading your CV and skill description markdown files
+
 2. Splitting the documents into manageable chunks
+
 3. Creating embeddings for these chunks using Ollama
+
 4. Storing these embeddings in a vector database (FAISS)
+
 5. When a question is asked, retrieving relevant context from the vector database
+
 6. Using Ollama to generate an answer based on the retrieved context, formatted in Markdown
 
 ## Features
 
 - Local execution using Ollama models
+
 - GPU acceleration support (NVIDIA CUDA and AMD ROCm)
+
 - RAG system for accurate, context-based answers
+
 - FastAPI backend for efficient API performance
+
 - Vue.js frontend with Gruvbox theme and Markdown support
+
 - Caddy reverse proxy with automatic HTTPS
+
 - Pure devenv development environment (no flakes)
+
 - Automatic document processing and embedding generation
+
 - Docker support for easy deployment
+
 - Smart GPU detection and configuration
+
 - Profile picture integration for personal branding
 
 ## Directory Structure
@@ -81,46 +96,48 @@ ollama-rag/
 
 1. Install Nix and direnv if not already installed:
 
-```bash
-# For Nix
-sh <(curl -L https://nixos.org/nix/install) --daemon
+   ```bash
+   # For Nix
+   sh <(curl -L https://nixos.org/nix/install) --daemon
 
-# For direnv
-nix-env -i direnv
-```
+   # For direnv
+   nix-env -i direnv
+   ```
 
-1. Clone the repository:
+2. Clone the repository:
 
-```bash
-git clone <repository-url>
-cd ollama-rag
-```
+   ```bash
+   git clone <repository-url>
+   cd ollama-rag
+   ```
 
-1. Enable direnv:
+3. Enable direnv:
 
-```bash
-direnv allow
-```
+   ```bash
+   direnv allow
+   ```
 
 ### Local Development
 
 1. Place your CV and skill files in the appropriate directories:
+
    - Add CV files to `data/cv/`
+
    - Add skill descriptions to `data/skills_md/`
 
 2. Process your documents:
 
-```bash
-python -m src.scripts.ingest_data
-```
+   ```bash
+   python -m src.scripts.ingest_data
+   ```
 
-1. Start the development server:
+3. Start the development server:
 
-```bash
-python -m src.api.main
-```
+   ```bash
+   python -m src.api.main
+   ```
 
-1. Visit [http://localhost:8000](http://localhost:8000) in your browser
+4. Visit [http://localhost:8000](http://localhost:8000) in your browser
 
 ### Production Deployment
 
@@ -128,24 +145,24 @@ python -m src.api.main
 
 2. Check your GPU support:
 
-```bash
-just check-gpu
-```
+   ```bash
+   just check-gpu
+   ```
 
-1. Deploy based on your hardware:
+3. Deploy based on your hardware:
 
-```bash
-# For NVIDIA GPUs:
-just up-cuda
+   ```bash
+   # For NVIDIA GPUs:
+   just up-cuda
 
-# For AMD GPUs:
-just up-rocm
+   # For AMD GPUs:
+   just up-rocm
 
-# For CPU only:
-just up
-```
+   # For CPU only:
+   just up
+   ```
 
-1. Visit [http://localhost:8181](http://localhost:8181) in your browser
+4. Visit [http://localhost:8181](http://localhost:8181) in your browser
 
 ## Usage
 
@@ -174,17 +191,25 @@ The system will auto-configure based on your hardware and start all necessary se
 The chat interface now supports full Markdown formatting in responses:
 
 - Headers for clear section organization
+
 - Code blocks for technical content
+
 - Lists for structured information
+
 - Tables for organized data
+
 - Blockquotes for important notes
+
 - Bold and italic text for emphasis
 
 ### API Endpoints
 
 - `GET /`: Serves the Vue.js chat interface with Markdown support
+
 - `POST /api/ask`: Main endpoint for questions and answers
+
 - `GET /api/health`: Health check endpoint
+
 - `GET /docs`: API documentation (Swagger UI)
 
 ## Response Format
@@ -215,10 +240,15 @@ For more information, see: [link](#)
 The Docker deployment consists of:
 
 - Backend service container with FastAPI
+
 - Caddy reverse proxy for routing and automatic HTTPS
+
 - Optional GPU support configuration
+
 - Automatic hardware detection
+
 - Health monitoring
+
 - Volume mounts for persistence
 
 ## Customization
@@ -226,51 +256,64 @@ The Docker deployment consists of:
 ### Changing Profile Information
 
 1. **Profile Picture**:
+
    - Replace the file at `assets/profile_pictures.jpg` with your own profile picture
+
    - The recommended image size is 180x180 pixels
+
    - The image will be automatically styled with a circular crop and subtle shadow
 
 2. **Changing Display Name**:
+
    - Open `static/index.html`
+
    - Locate the div with the name (around line 150)
+
    - Change the text "Olaf K-Freund" to your name
 
-   ```html
-   <div style="font-size:1.2rem; color:#bdae93; margin-top:0.5rem; font-weight:bold;">Your Name</div>
-   ```
+     ```html
+     <div style="font-size:1.2rem; color:#bdae93; margin-top:0.5rem; font-weight:bold;">Your Name</div>
+     ```
 
 ### Domain and SSL Configuration
 
 1. **Changing Domain**:
+
    - Open `docker/Caddyfile`
+
    - Replace `home.freundcloud.com` with your domain name
 
-   ```caddy
-   your-domain.com {
-       # ...existing configuration...
-   }
-   ```
+     ```caddy
+     your-domain.com {
+         # ...existing configuration...
+     }
+     ```
 
    - Update the `DOMAIN` environment variable in `docker-compose.yml`:
 
-   ```yaml
-   environment:
-     - DOMAIN=your-domain.com
-   ```
+     ```yaml
+     environment:
+       - DOMAIN=your-domain.com
+     ```
 
 2. **SSL Certificate**:
+
    - Caddy handles SSL certificates automatically
+
    - Make sure your domain's DNS points to your server
+
    - Caddy will automatically obtain and renew certificates from Let's Encrypt
+
    - For development, Caddy generates self-signed certificates
+
    - To use a custom certificate:
 
-   ```caddy
-   your-domain.com {
-       tls /path/to/cert.pem /path/to/key.pem
-       # ...rest of configuration...
-   }
-   ```
+     ```caddy
+     your-domain.com {
+         tls /path/to/cert.pem /path/to/key.pem
+         # ...rest of configuration...
+     }
+     ```
 
 After making these changes:
 
@@ -282,10 +325,127 @@ After making these changes:
 
 2. Clear your browser cache if the changes don't appear immediately
 
+## Accessing the System
+
+You can access the chat interface in two ways:
+
+- **Locally (HTTP):**
+
+  - Visit [http://localhost:80](http://localhost:80) in your browser for local development and testing.
+
+- **Public (HTTPS):**
+
+  - Visit [https://home.freundcloud.com](https://home.freundcloud.com) for secure, public access with automatic SSL via Caddy.
+
+Both endpoints are available simultaneously for flexible development and deployment.
+
+## Using the API with curl
+
+You can interact with the API directly using `curl` for testing or integration:
+
+### Health Check
+
+```bash
+curl http://localhost:80/api/health
+curl https://home.freundcloud.com/api/health -k
+```
+
+### Ask a Question
+
+```bash
+curl -X POST http://localhost:80/api/ask \
+     -H "Content-Type: application/json" \
+     -d '{"query": "What are your main skills?"}'
+
+curl -X POST https://home.freundcloud.com/api/ask \
+     -H "Content-Type: application/json" \
+     -d '{"query": "What are your main skills?"}' -k
+```
+
+The response will be in the following format:
+
+```json
+{
+  "status": "success",
+  "data": {
+    "question": "What are your main skills?",
+    "answer": "...markdown-formatted answer..."
+  },
+  "message": "Answer generated successfully."
+}
+```
+
+## How to Use This Codebase for Your Own CV/Skills
+
+1. **Clone the Repository:**
+
+   ```bash
+   git clone <repository-url>
+   cd ollama-rag
+   ```
+
+2. **Replace Profile Picture:**
+
+   - Place your own image at `assets/profile_pictures.jpg` (recommended size: 180x180px).
+
+3. **Add Your CV and Skills:**
+
+   - Place your CV files in `data/cv/`
+
+   - Place your skill description markdown files in `data/skills_md/`
+
+4. **(Optional) Change Display Name:**
+
+   - Edit `static/index.html` and update the name in the profile section.
+
+5. **(Optional) Change Domain:**
+
+   - Edit `docker/Caddyfile` and `docker-compose.yml` to use your own domain.
+
+   - Update DNS to point to your server.
+
+6. **Process Your Documents:**
+
+   ```bash
+   python -m src.scripts.ingest_data
+   ```
+
+7. **Start the System:**
+
+   - For local development:
+
+     ```bash
+     python -m src.api.main
+     # or use Docker Compose for full stack
+     docker compose up --build -d
+     ```
+
+   - For production, use the appropriate `just up`, `just up-cuda`, or `just up-rocm` command.
+
+8. **Access the Interface:**
+
+   - Local: [http://localhost:80](http://localhost:80)
+
+   - Public: [https://your-domain.com](https://your-domain.com)
+
+## What Needs to Be Changed for Your Own Use
+
+- **Profile Picture:** Replace `assets/profile_pictures.jpg`.
+
+- **CV and Skills:** Add your own files to `data/cv/` and `data/skills_md/`.
+
+- **Display Name:** Edit in `static/index.html`.
+
+- **Domain Name:** Update in `docker/Caddyfile`, `docker-compose.yml`, and DNS.
+
+- **(Optional) Custom SSL:** See Caddyfile section for using your own certificates.
+
 ## Documentation
 
 - [GPU Support Guide](docs/GPU_SUPPORT.md): Detailed GPU configuration instructions
+
 - API Documentation: Available at `/docs` endpoint
+
 - [Project Plan](PROJECT_PLAN.md): Implementation details and progress
 
 ## Support and Issues
@@ -293,6 +453,9 @@ After making these changes:
 If you encounter any issues:
 
 1. Check the GPU support with `just check-gpu`
+
 2. Verify your Docker installation
+
 3. Check the logs with `just logs`
+
 4. Consult the [GPU Support Guide](docs/GPU_SUPPORT.md)
