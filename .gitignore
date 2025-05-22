@@ -48,5 +48,5 @@ result-*
 Thumbs.db
 
 #data files
-cv/
-skills_md/
+data/cv/
+data/skills_md/
