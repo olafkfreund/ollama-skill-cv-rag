@@ -46,3 +46,7 @@ result-*
 # Misc
 .DS_Store
 Thumbs.db
+
+#data files
+cv/
+skills_md/
