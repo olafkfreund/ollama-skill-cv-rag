@@ -1,7 +1,7 @@
 // CV RAG System with Vue.js
 const { createApp, ref, computed, onMounted, watch } = Vue;
 
-createApp({
+const app = createApp({
     setup() {
         // Core data
         const messages = ref([]);
@@ -75,7 +75,7 @@ createApp({
             // Validate input
             const trimmedInput = userInput.value.trim();
             if (!trimmedInput || isLoading.value) return;
-            
+
             // Clear any previous error
             errorMessage.value = '';
 
@@ -87,83 +87,49 @@ createApp({
                 timestamp: new Date()
             };
             messages.value.push(userMessage);
-            
-            // Clear input field
             userInput.value = '';
-            
-            // Set loading state
             isLoading.value = true;
-            
-            // Add a temporary loading message
-            const loadingMessageId = Date.now() + 1;
-            messages.value.push({
-                id: loadingMessageId,
-                role: 'assistant',
-                content: 'Thinking...',
-                isLoading: true,
-                timestamp: new Date()
-            });
-            
-            // Focus input for next message
-            if (inputField.value) {
-                inputField.value.focus();
-            }
 
             try {
-                // Make request to API
-                const response = await fetch('/api/chat', {
+                const response = await fetch('/api/ask', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ query: trimmedInput })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: userMessage.content })
                 });
-
-                if (!response.ok) {
-                    throw new Error(`Server responded with status: ${response.status}`);
-                }
-
                 const data = await response.json();
-                
-                // Remove loading message
-                const index = messages.value.findIndex(m => m.id === loadingMessageId);
-                if (index !== -1) {
-                    messages.value.splice(index, 1);
-                }
-                
-                // Add the response message
-                messages.value.push({
-                    id: Date.now() + 2,
-                    role: 'assistant',
-                    content: data.response || 'I\'m sorry, I couldn\'t process that query.',
-                    timestamp: new Date()
-                });
-            } catch (error) {
-                console.error('Error sending message:', error);
-                
-                // Remove loading message
-                const index = messages.value.findIndex(m => m.id === loadingMessageId);
-                if (index !== -1) {
-                    messages.value.splice(index, 1);
-                }
-                
-                // Add an error message
-                errorMessage.value = `Error: ${error.message}`;
-                messages.value.push({
-                    id: Date.now() + 2,
-                    role: 'assistant',
-                    content: 'Sorry, there was an error processing your request. Please try again later.',
-                    timestamp: new Date()
-                });
-            } finally {
                 isLoading.value = false;
-                
-                // Focus back on input field
-                setTimeout(() => {
-                    if (inputField.value) {
-                        inputField.value.focus();
-                    }
-                }, 100);
+                if (data.status === 'error' && data.message && data.message.toLowerCase().includes('reindexing')) {
+                    messages.value.push({
+                        id: Date.now() + 1,
+                        role: 'assistant',
+                        content: '⏳ The system is currently reindexing the knowledge base. Please try again in a few moments.',
+                        timestamp: new Date()
+                    });
+                    return;
+                }
+                if (data.status === 'success' && data.data && data.data.answer) {
+                    messages.value.push({
+                        id: Date.now() + 2,
+                        role: 'assistant',
+                        content: data.data.answer,
+                        timestamp: new Date()
+                    });
+                } else {
+                    messages.value.push({
+                        id: Date.now() + 3,
+                        role: 'assistant',
+                        content: data.message || 'Sorry, something went wrong.',
+                        timestamp: new Date()
+                    });
+                }
+            } catch (error) {
+                isLoading.value = false;
+                messages.value.push({
+                    id: Date.now() + 4,
+                    role: 'assistant',
+                    content: '⚠️ The system is temporarily unavailable. This may be due to reindexing the knowledge base. Please try again in a few moments.',
+                    timestamp: new Date()
+                });
             }
         };
 
@@ -181,4 +147,87 @@ createApp({
             renderMarkdown // expose to template
         };
     }
-}).mount('#app');
+});
+
+// Function to play TTS
+function playTTS(text) {
+    if (!text) return;
+    const btn = event?.target;
+    if (btn) btn.disabled = true;
+    fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('TTS request failed');
+            return response.blob();
+        })
+        .then(audioBlob => {
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            audio.onended = () => { if (btn) btn.disabled = false; };
+            audio.onerror = () => { if (btn) btn.disabled = false; };
+            audio.play();
+        })
+        .catch(() => { if (btn) btn.disabled = false; });
+}
+
+// Global Vue component for TTS button
+app.component('tts-button', {
+    props: ['text'],
+    template: `<button class="tts-btn" @click="play" :disabled="loading"><span v-if="loading">🔄</span><span v-else>🔊 Listen</span></button>`,
+    data() { return { loading: false }; },
+    methods: {
+        play() {
+            if (!this.text || this.loading) return;
+            this.loading = true;
+            console.log('[TTS] Sending request to /api/tts:', this.text);
+            fetch('/api/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: this.text })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error('[TTS] Response not OK:', response.status, response.statusText);
+                        throw new Error('TTS request failed: ' + response.status);
+                    }
+                    return response.blob();
+                })
+                .then(audioBlob => {
+                    console.log('[TTS] Received audio blob:', audioBlob);
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    audio.onended = () => { this.loading = false; };
+                    audio.onerror = (e) => {
+                        this.loading = false;
+                        alert('Audio playback failed.');
+                        console.error('[TTS] Audio playback error:', e);
+                    };
+                    audio.play().catch(e => {
+                        this.loading = false;
+                        alert('Audio playback failed.');
+                        console.error('[TTS] Audio play() error:', e);
+                    });
+                })
+                .catch((err) => {
+                    this.loading = false;
+                    alert('TTS request failed: ' + err.message);
+                    console.error('[TTS] Fetch error:', err);
+                });
+        }
+    }
+});
+
+// Patch message rendering to include the TTS button for each assistant message
+const origRender = app.config.globalProperties.renderMarkdown;
+app.config.globalProperties.renderMarkdown = function(text, message) {
+    let html = origRender ? origRender.call(this, text) : text;
+    if (message && message.role === 'assistant') {
+        html += `<tts-button :text="${JSON.stringify(message.content)}"></tts-button>`;
+    }
+    return html;
+};
+
+app.mount('#app');

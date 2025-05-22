@@ -9,29 +9,27 @@
         level DEBUG
     }
 
-    # Handle root path
-    handle / {
-        root * /srv/static
-        try_files {path} /index.html
-        file_server
+    # Handle API requests FIRST (no strip_prefix, keep /api)
+    handle /api/* {
+        reverse_proxy rag_backend:8080
     }
 
-    # Handle static CSS and JS files
+    # Handle static files
     handle /static/* {
         root * /srv
         file_server
     }
 
-    # Handle assets
     handle /assets/* {
         root * /srv
         file_server
     }
 
-    # Handle API requests
-    handle /api/* {
-        uri strip_prefix /api
-        reverse_proxy backend:8080
+    # Fallback: serve SPA
+    handle {
+        root * /srv/static
+        try_files {path} /index.html
+        file_server
     }
 
     # Security headers
@@ -53,32 +51,27 @@ home.freundcloud.com {
         level DEBUG
     }
 
-    # Handle root path
-    handle / {
-        root * /srv/static
-        try_files {path} /index.html
-        file_server
+    # Handle API requests FIRST (no strip_prefix, keep /api)
+    handle /api/* {
+        reverse_proxy rag_backend:8080
     }
 
-    # Handle static CSS and JS files
     handle /static/* {
         root * /srv
         file_server
     }
 
-    # Handle assets
     handle /assets/* {
         root * /srv
         file_server
     }
 
-    # Handle API requests
-    handle /api/* {
-        uri strip_prefix /api
-        reverse_proxy backend:8080
+    handle {
+        root * /srv/static
+        try_files {path} /index.html
+        file_server
     }
 
-    # Security headers
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Content-Type-Options "nosniff"

@@ -7,19 +7,24 @@ import os
 from pathlib import Path
 from typing import Dict, Any
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-try:
-    import uvicorn
-except ImportError:
-    uvicorn = None
-
 from src.core.rag_pipeline import answer_question
+from src.backend.api import tts
+
+app = FastAPI(
+    title="Personal Skills RAG System",
+    description="A RAG system that answers questions about my skills and experience",
+    version="1.0.0"
+)
+
+# Register the TTS router with prefix /api so /api/tts is available
+app.include_router(tts.router, prefix="/api")
 
 
 def create_response(status: str, data: Any, message: str) -> Dict[str, Any]:
@@ -40,13 +45,6 @@ def create_response(status: str, data: Any, message: str) -> Dict[str, Any]:
         "message": message
     }
 
-
-# Initialize FastAPI app
-app = FastAPI(
-    title="Personal Skills RAG System",
-    description="A RAG system that answers questions about my skills and experience",
-    version="1.0.0"
-)
 
 # Define base directories
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -103,19 +101,23 @@ def health_check():
     return {"status": "healthy"}
 
 
-@app.post("/ask")
-def ask_question(request: QuestionRequest):
+api_router = APIRouter()
+
+@api_router.post("/ask")
+async def ask(request: Request):
     """
     Endpoint to ask a question about skills and experience.
     
     Args:
-        request (QuestionRequest): The question request
+        request (Request): The request object
         
     Returns:
         JSONResponse: The standardized API response
     """
     try:
-        if not request.query or request.query.strip() == "":
+        data = await request.json()
+        query = data.get("query", "")
+        if not query or query.strip() == "":
             return JSONResponse(
                 status_code=200,  # Always return 200 for frontend compatibility
                 content=create_response(
@@ -125,10 +127,10 @@ def ask_question(request: QuestionRequest):
                 )
             )
             
-        print(f"API received question: {request.query}")
+        print(f"API received question: {query}")
         
         # Get the answer from the RAG pipeline
-        result = answer_question(request.query)
+        result = answer_question(query)
         
         if not result["success"]:
             # Check if we have error details for debugging
@@ -160,6 +162,15 @@ def ask_question(request: QuestionRequest):
                 message="Answer generated successfully"
             )
         )
+    except FileNotFoundError:
+        return JSONResponse(
+            status_code=200,  # Always return 200 for frontend compatibility
+            content=create_response(
+                status="error",
+                data={},
+                message="The system is currently reindexing the knowledge base. Please try again in a few moments."
+            )
+        )
     except Exception as e:
         print(f"Unexpected API error: {str(e)}")
         return JSONResponse(
@@ -171,8 +182,7 @@ def ask_question(request: QuestionRequest):
             )
         )
 
-
-@app.post("/chat")
+@api_router.post("/chat")
 async def chat(request: Request):
     """
     Endpoint for the chat interface.
@@ -210,7 +220,8 @@ async def chat(request: Request):
             content={"response": f"An error occurred: {str(e)}"}
         )
 
-
+# Register the API router with prefix /api
+app.include_router(api_router, prefix="/api")
 
 
 # Optional: Add a simple HTML interface

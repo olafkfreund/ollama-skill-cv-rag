@@ -13,6 +13,12 @@
 7. Iterate until the root cause is fixed and all tests pass.
 8. Reflect and validate comprehensively. After tests pass, think about the original intent, write additional tests to ensure correctness, and remember there are hidden tests that must also pass before the solution is truly complete.
 
+- Always start a new development session by running `devenv shell` in your terminal. This is required for NixOS and ensures all dependencies and environment variables are loaded.
+- Refer to PROJECT_PLAN.md and README.md for up-to-date project goals, architecture, and onboarding steps.
+- Follow the documented workflow for adding new features, fixing bugs, and running tests as described in the project documentation.
+- Use the provided Makefile and scripts for common tasks when available.
+- For troubleshooting, consult the FAQ and troubleshooting sections in README.md.
+
 Refer to the detailed sections below for more information on each step.
 
 ## 1. Deeply Understand the Problem
@@ -62,6 +68,8 @@ Carefully read the issue and think hard about a plan to solve it before coding.
 - Be aware that there are additional hidden tests that must also pass for the solution to be successful.
 - Do not assume the task is complete just because the visible tests pass; continue refining until you are confident the fix is robust and comprehensive.
 
+## NixOS devenv Shell Requirement
+- When opening a new console or terminal session, always run `devenv shell` before executing any development, build, or test commands. This ensures the environment is correctly set up with all dependencies and paths. Copilot and all contributors must follow this step for every new shell session.
 
 ## Project Overview
 This is a Retrieval Augmented Generation (RAG) system using Ollama, LangChain, and FastAPI. The system processes CV and markdown files to answer questions about skills and experience through a Vue.js chat interface with Gruvbox theme.
@@ -158,7 +166,6 @@ This is a Retrieval Augmented Generation (RAG) system using Ollama, LangChain, a
 - Set up proper logging
 - Configure resource limits
 
-
 ## Common Functions
 
 ### Document Processing
@@ -219,6 +226,24 @@ def create_response(
     """
     pass
 ```
+
+## Example: Processing a CV with Metadata
+
+To ensure your CV is indexed and easily retrievable, process it with explicit metadata:
+
+```python
+cv_metadata = {
+    "type": "cv",
+    "owner": "Olaf Freund",
+    "title": "Olaf Freund CV"
+}
+
+cv_documents = await process_document(cv_content, cv_metadata)
+# Add cv_documents to your vector store as usual
+```
+
+- Replace `cv_content` with the string content of your CV.
+- This metadata will help the retrieval system identify and prioritize your CV for relevant queries.
 
 ## Notes for AI Assistance
 - Maintain type safety
