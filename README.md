@@ -34,37 +34,49 @@ This project implements a Retrieval Augmented Generation (RAG) system using Olla
 ## 🛠️ Installation
 
 ### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/olafkfreund/ollama-skill-cv-rag.git
 cd ollama-skill-cv-rag
 ```
 
 ### 2. Setup Development Environment (Recommended)
+
 ```bash
 devenv shell
 ```
 
 ### 3. Build and Run with Docker
+
 - **CPU only:**
+
   ```bash
   docker-compose up --build
   ```
+
 - **NVIDIA GPU:**
+
   ```bash
   docker-compose -f docker-compose.yml -f docker-compose.cuda.yml up --build
   ```
+
 - **AMD GPU:**
+
   ```bash
   docker-compose -f docker-compose.yml -f docker-compose.rocm.yml up --build
   ```
 
 ### 4. Manual Backend/Frontend Start (Dev)
+
 - **Backend:**
+
   ```bash
   cd src/backend
   uvicorn main:app --reload
   ```
+
 - **Frontend:**
+
   ```bash
   cd src/frontend
   npm install
@@ -72,14 +84,17 @@ devenv shell
   ```
 
 ## 📝 Usage
+
 - Access the chat UI at `http://localhost:3000` (or as configured)
 - Ask questions about your skills, experience, or any indexed markdown content
 - Responses are grounded in your CV and skill markdown files
 
 ## 🗂️ Adding Skills & CVs
+
 - Place markdown skill files in `data/skills_md/pages/`
 - Update your CV in the appropriate directory and metadata
 - Run the data ingestion script:
+
   ```bash
   python src/scripts/ingest_data.py
   ```
@@ -101,37 +116,46 @@ devenv shell
 - `README.md` — Main documentation
 
 ## 🔒 Security & Best Practices
+
 - All user input is validated and sanitized
 - CORS is configured for frontend/backend separation
 - Secrets and credentials are managed via environment variables
 - Docker images use multi-stage builds for minimal size and security
 
 ## 🧪 Testing
+
 - Run backend tests:
+
   ```bash
   python3 run_tests.py
   ```
+
 - Frontend tests:
+
   ```bash
   cd src/frontend
   npm run test
   ```
 
 ## 🧑‍💻 Development Workflow
+
 - Always start with `devenv shell` for NixOS reproducibility
 - Use the Makefile and scripts for common tasks
 - Refer to `PROJECT_PLAN.md` and this README for up-to-date goals and onboarding
 
 ## 🩺 Health Checks & Monitoring
+
 - Caddy and backend expose health endpoints for readiness/liveness
 - Logs are output to stdout/stderr for container monitoring
 
 ## 📚 Documentation
+
 - All API endpoints are documented via OpenAPI (Swagger UI at `/api/docs`)
 - See `PROJECT_PLAN.md` for architecture and onboarding
 - Environment variables are documented in `.env.example`
 
 ## 🧩 Extending the System
+
 - Add new markdown files for additional skills or topics
 - Integrate new LLMs via Ollama configuration
 - Customize the frontend theme in `src/frontend` (Gruvbox colors)
@@ -139,6 +163,7 @@ devenv shell
 ## Latest Updates
 
 ### CV Retrieval Enhancement
+
 - The system now ensures that Olaf Freund's CV is shown when a user query is about the CV.
 - CV documents are processed with explicit metadata: `type: "cv"`, `owner: "Olaf Freund"`, `title: "Olaf Freund CV"`.
 - Retrieval logic prioritizes or filters for documents with this metadata when the query is about the CV.
@@ -157,15 +182,18 @@ cv_documents = await process_document(cv_content, cv_metadata)
 - For more details, see the Copilot Instructions and code comments.
 
 ## 🆘 Troubleshooting
+
 - See the FAQ and troubleshooting sections in this README
 - For NixOS issues, always run `devenv shell` before any dev commands
 - For GPU issues, check Docker Compose overrides and driver installation
 
 ## 🤝 Contributing
+
 - See `CONTRIBUTING.md` for guidelines
 - PRs and issues are welcome!
 
 ## 📄 License
+
 MIT
 
 ---
