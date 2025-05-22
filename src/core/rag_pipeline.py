@@ -58,6 +58,8 @@ Remember to structure your response with clear sections and proper formatting fo
 - Format all answers to highlight Olaf's DevOps and SRE expertise and values.
 - If you do not know the answer based on the provided context, say "I don't know based on the provided CV and skills documentation."
 - At the end of your answer, provide a short tip for the user on how to ask for more information. For example: "Tip: You can ask about specific roles, skills, time periods, or request code examples for more detailed answers. Try asking: 'Show me a code example for Terraform automation.'or have a look at https://freundcloud.gitbook.io/devops-examples-from-real-life"
+- If the  user asks for an example, always prioritize  returning code blocks from the conext.
+
 
 Context:
 {context}
@@ -123,7 +125,7 @@ def create_rag_chain() -> Runnable:
         vector_store = load_vector_store()
         retriever = vector_store.as_retriever(
             search_type="similarity",
-            search_kwargs={"k": 7}  # Retrieve top 7 most relevant chunks for broader context
+            search_kwargs={"k": 50}  # Retrieve top 7 most relevant chunks for broader context
         )
         
         # Initialize Ollama model
